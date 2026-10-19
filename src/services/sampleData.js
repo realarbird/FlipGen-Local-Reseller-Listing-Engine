@@ -1,5 +1,3 @@
-// Sample vintage & thrift inventory items for FlipGen Reseller Engine
-
 export const PRESET_ITEMS = [
   {
     key: 'electronics',

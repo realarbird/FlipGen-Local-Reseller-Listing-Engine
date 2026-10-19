@@ -17,6 +17,8 @@ import {
 export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) {
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [copiedId, setCopiedId] = useState(null);
+
   useEffect(() => {
     const refresh = () => setItems(getArchiveItems());
     refresh();
@@ -45,7 +47,6 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
     setTimeout(() => setCopiedId(null), 1800);
   };
 
-  // Filter items
   const filtered = items.filter((item) => {
     const query = searchTerm.toLowerCase();
     return (
@@ -55,7 +56,6 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
     );
   });
 
-  // Calculate economics
   const totalValue = items.reduce((sum, i) => sum + (parseFloat(i.price) || 0), 0);
   const totalCost = items.reduce((sum, i) => sum + (parseFloat(i.cogs) || 0), 0);
   const totalProfit = items.reduce((sum, i) => sum + (parseFloat(i.profit) || 0), 0);
@@ -63,8 +63,6 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2">
         <div>
           <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
@@ -83,7 +81,6 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
           </p>
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2.5">
           <button
             type="button"
@@ -108,7 +105,6 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
         </div>
       </div>
 
-      {/* Summary Economics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -161,9 +157,7 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
         </div>
       </div>
 
-      {/* Ledger Table Section */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors">
-        {/* Table Top Toolbar */}
         <div className="p-4 border-b border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/40">
           <div className="relative flex-1 max-w-sm">
             <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -181,7 +175,6 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
           </div>
         </div>
 
-        {/* Table View */}
         {filtered.length === 0 ? (
           <div className="py-16 px-4 text-center flex flex-col items-center justify-center">
             <Archive className="w-10 h-10 text-slate-300 dark:text-slate-600 stroke-1 mb-3" />
@@ -202,11 +195,9 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
           </div>
         ) : (
           <>
-            {/* Mobile Touch-Friendly Card View (screens < md) */}
             <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
               {filtered.map((item) => (
                 <div key={item.id} className="p-4 flex flex-col gap-3 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                  {/* Top Badges & Delete */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
@@ -230,44 +221,41 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
                     </button>
                   </div>
 
-                  {/* Title & Date */}
                   <div>
                     <h3 className="font-semibold text-slate-900 dark:text-white text-sm leading-snug">
                       {item.title}
                     </h3>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
-                      Saved {new Date(item.savedAt).toLocaleDateString()}
+                      Saved {item.savedAt ? new Date(item.savedAt).toLocaleDateString() : 'Recent'}
                     </span>
                   </div>
 
-                  {/* Economics Grid */}
                   <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
                     <div>
                       <span className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 block">COGS</span>
                       <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        ${parseFloat(item.cogs).toFixed(2)}
+                        ${parseFloat(item.cogs || 0).toFixed(2)}
                       </span>
                     </div>
                     <div>
                       <span className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 block">Target</span>
                       <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
-                        ${parseFloat(item.price).toFixed(2)}
+                        ${parseFloat(item.price || 0).toFixed(2)}
                       </span>
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 block">Est. Profit</span>
                       <div className="flex items-center justify-end gap-1">
                         <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                          +${parseFloat(item.profit).toFixed(2)}
+                          +${parseFloat(item.profit || 0).toFixed(2)}
                         </span>
                         <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.2 rounded">
-                          +{parseFloat(item.roi).toFixed(0)}%
+                          +{parseFloat(item.roi || 0).toFixed(0)}%
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Multi-Platform 1-Tap Copy Pills */}
                   <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                     <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mr-1">Copy:</span>
                     {item.ebayTitle && (
@@ -323,7 +311,6 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
               ))}
             </div>
 
-            {/* Desktop Wide Table View (screens >= md) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
@@ -351,7 +338,7 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
                           </span>
                         </div>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
-                          Saved {new Date(item.savedAt).toLocaleDateString()}
+                          Saved {item.savedAt ? new Date(item.savedAt).toLocaleDateString() : 'Recent'}
                         </span>
                       </td>
 
@@ -366,20 +353,20 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
-                        ${parseFloat(item.cogs).toFixed(2)}
+                        ${parseFloat(item.cogs || 0).toFixed(2)}
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-900 dark:text-white">
-                        ${parseFloat(item.price).toFixed(2)}
+                        ${parseFloat(item.price || 0).toFixed(2)}
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <span className="font-bold font-mono text-emerald-700 dark:text-emerald-400">
-                            +${parseFloat(item.profit).toFixed(2)}
+                            +${parseFloat(item.profit || 0).toFixed(2)}
                           </span>
                           <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-                            +{parseFloat(item.roi).toFixed(0)}%
+                            +{parseFloat(item.roi || 0).toFixed(0)}%
                           </span>
                         </div>
                       </td>
@@ -448,9 +435,7 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
             </div>
           </>
         )}
-
       </div>
-
     </div>
   );
 }

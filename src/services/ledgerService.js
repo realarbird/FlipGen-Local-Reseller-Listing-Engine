@@ -1,6 +1,3 @@
-// Sales Archive & Inventory Ledger Service
-// Stores saved listings locally with CSV export and economic reporting
-
 const STORAGE_KEY = 'flipgen_sales_archive';
 
 const DEFAULT_ARCHIVE = [
@@ -29,9 +26,9 @@ export function getArchiveItems() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_ARCHIVE));
       return DEFAULT_ARCHIVE;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : DEFAULT_ARCHIVE;
   } catch (e) {
-    console.error('Failed to load archive items:', e);
     return DEFAULT_ARCHIVE;
   }
 }
@@ -63,7 +60,6 @@ export function saveItemToArchive(item) {
     }
     return newItem;
   } catch (e) {
-    console.error('Failed to save to archive:', e);
     return null;
   }
 }
@@ -78,7 +74,6 @@ export function removeArchiveItem(id) {
     }
     return updated;
   } catch (e) {
-    console.error('Failed to delete item from archive:', e);
     return [];
   }
 }
@@ -100,16 +95,16 @@ export function exportArchiveToCSV() {
   const headers = ['Specimen ID', 'Working Title', 'Niche Category', 'Condition', 'COGS ($)', 'Target Price ($)', 'Est. Net Profit ($)', 'Est. ROI (%)', 'Saved Date', 'Status', 'eBay Title', 'Poshmark Title', 'Mercari Title'];
   
   const rows = items.map(item => [
-    `"${item.specimen}"`,
+    `"${item.specimen || ''}"`,
     `"${(item.title || '').replace(/"/g, '""')}"`,
     `"${(item.niche || '').replace(/"/g, '""')}"`,
     `"${(item.condition || '').replace(/"/g, '""')}"`,
-    item.cogs.toFixed(2),
-    item.price.toFixed(2),
-    item.profit.toFixed(2),
-    item.roi.toFixed(1),
-    `"${new Date(item.savedAt).toLocaleDateString()}"`,
-    `"${item.status}"`,
+    (parseFloat(item.cogs) || 0).toFixed(2),
+    (parseFloat(item.price) || 0).toFixed(2),
+    (parseFloat(item.profit) || 0).toFixed(2),
+    (parseFloat(item.roi) || 0).toFixed(1),
+    `"${item.savedAt ? new Date(item.savedAt).toLocaleDateString() : ''}"`,
+    `"${item.status || ''}"`,
     `"${(item.ebayTitle || '').replace(/"/g, '""')}"`,
     `"${(item.poshTitle || '').replace(/"/g, '""')}"`,
     `"${(item.mercariTitle || '').replace(/"/g, '""')}"`
@@ -126,9 +121,6 @@ export function exportArchiveToCSV() {
   document.body.removeChild(link);
 }
 
-/**
- * Merge cloud archive items into local ledger without duplicates
- */
 export function importArchiveItemsFromCloud(cloudItems) {
   try {
     if (!Array.isArray(cloudItems) || cloudItems.length === 0) return getArchiveItems();
@@ -150,7 +142,6 @@ export function importArchiveItemsFromCloud(cloudItems) {
     }
     return merged;
   } catch (e) {
-    console.error('Failed to merge cloud archive items:', e);
     return getArchiveItems();
   }
 }

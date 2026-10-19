@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, ExternalLink, Hash, Tag, Info, ShoppingBag } from 'lucide-react';
+import { Copy, Check, Hash, Tag } from 'lucide-react';
 
 export default function PlatformCard({ platform, data, price }) {
   const [copiedKey, setCopiedKey] = useState(null);
@@ -48,7 +48,6 @@ export default function PlatformCard({ platform, data, price }) {
   const isEbay = platform === 'ebay';
   const isOverEbayLimit = isEbay && titleLength > 80;
 
-  // Build full listing text for 1-click copy
   const getFullListingText = () => {
     let text = `TITLE:\n${data.title}\n\nDESCRIPTION:\n${data.description}`;
     if (data.keywords && data.keywords.length) {
@@ -65,14 +64,11 @@ export default function PlatformCard({ platform, data, price }) {
 
   return (
     <div className="glass-card rounded-2xl overflow-hidden flex flex-col justify-between transition-all hover:border-slate-700/80 group">
-      
-      {/* Top Header */}
       <div className="p-4 border-b border-slate-800/80 bg-slate-900/40 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {renderBadge()}
         </div>
 
-        {/* eBay Char Limit Indicator */}
         {isEbay && (
           <div className={`text-[11px] font-mono px-2 py-0.5 rounded-md border flex items-center gap-1 ${
             isOverEbayLimit
@@ -106,10 +102,7 @@ export default function PlatformCard({ platform, data, price }) {
         </button>
       </div>
 
-      {/* Body Content */}
       <div className="p-5 space-y-4 flex-1 flex flex-col">
-        
-        {/* Title Section */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">
@@ -135,7 +128,6 @@ export default function PlatformCard({ platform, data, price }) {
           </p>
         </div>
 
-        {/* Description Section */}
         <div className="space-y-1.5 flex-1 flex flex-col">
           <div className="flex items-center justify-between">
             <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">
@@ -161,7 +153,6 @@ export default function PlatformCard({ platform, data, price }) {
           </div>
         </div>
 
-        {/* Tags / Keywords */}
         <div className="space-y-1.5 pt-1">
           <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 block">
             {isEbay ? 'Search Keywords' : platform === 'poshmark' ? 'Closet Style Tags' : 'Hashtags'}
@@ -207,7 +198,6 @@ export default function PlatformCard({ platform, data, price }) {
 
       </div>
 
-      {/* Footer Info Pill */}
       <div className="px-5 py-2.5 bg-slate-900/30 border-t border-slate-800/60 text-[11px] text-slate-400 flex items-center justify-between">
         <span className="text-slate-500">
           {isEbay ? 'Standard 13.25% + $0.30' : platform === 'poshmark' ? 'Flat 20% Fee' : '10% Selling Fee'}

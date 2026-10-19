@@ -53,7 +53,6 @@ export default function SettingsModal({
         className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-xs">
@@ -76,9 +75,7 @@ export default function SettingsModal({
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-6 space-y-5 text-sm flex-1 overflow-y-auto">
-          {/* Base URL */}
           <div>
             <label className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 mb-1.5 text-xs uppercase tracking-wider">
               <Server className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
@@ -96,7 +93,6 @@ export default function SettingsModal({
             </p>
           </div>
 
-          {/* Model selection */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider">
@@ -140,7 +136,6 @@ export default function SettingsModal({
             </p>
           </div>
 
-          {/* Temperature Slider */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider">
@@ -167,7 +162,6 @@ export default function SettingsModal({
             </div>
           </div>
 
-          {/* Judge Demo Mode Toggle */}
           <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50/70 dark:bg-amber-950/30 flex items-start justify-between gap-3">
             <div className="space-y-0.5">
               <div className="flex items-center gap-1.5">
@@ -192,7 +186,6 @@ export default function SettingsModal({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 shrink-0">
           <button
             type="button"

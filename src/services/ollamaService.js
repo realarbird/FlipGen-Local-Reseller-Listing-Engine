@@ -1,14 +1,6 @@
-// Ollama Service for FlipGen Reseller Engine
-// Connects to local Ollama (gemma2) with fallback Judge Demo Mode
-
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
 export const DEFAULT_MODEL = 'gemma2';
 
-/**
- * Checks connection to local Ollama API
- * @param {string} baseUrl
- * @returns {Promise<{connected: boolean, models: Array, error?: string}>}
- */
 export async function checkOllamaConnection(baseUrl = DEFAULT_OLLAMA_URL) {
   const isHttpsPage = typeof window !== 'undefined' && window.location.protocol === 'https:';
   const isTargetInsecure = baseUrl.startsWith('http://');
@@ -52,11 +44,6 @@ export async function checkOllamaConnection(baseUrl = DEFAULT_OLLAMA_URL) {
   }
 }
 
-/**
- * Generates an eBay, Poshmark, and Mercari listing for an item
- * @param {Object} itemData { item_name, condition, raw_notes, price }
- * @param {Object} options { baseUrl, model, demoMode, temperature }
- */
 export async function generateListing(itemData, options = {}) {
   const {
     baseUrl = DEFAULT_OLLAMA_URL,
@@ -65,7 +52,6 @@ export async function generateListing(itemData, options = {}) {
     temperature = 0.7
   } = options;
 
-  // Seamless fallback to Judge Demo Mode if requested or if offline
   if (demoMode) {
     return await generateSimulatedListing(itemData);
   }
@@ -144,17 +130,14 @@ You MUST output ONLY a valid JSON object matching this schema:
     try {
       parsedResponse = JSON.parse(data.response);
     } catch (parseErr) {
-      // Handle cases where response might be wrapped in markdown code blocks
       const cleaned = data.response.replace(/```json/g, '').replace(/```/g, '').trim();
       parsedResponse = JSON.parse(cleaned);
     }
 
-    // Enforce strict eBay 80-char cap if model went slightly over
     if (parsedResponse.ebay && parsedResponse.ebay.title && parsedResponse.ebay.title.length > 80) {
       parsedResponse.ebay.title = parsedResponse.ebay.title.substring(0, 80).trim();
     }
 
-    // Ensure ebay specifics and mercari bullets exist for rich UI rendering
     if (parsedResponse.ebay && !parsedResponse.ebay.specifics) {
       parsedResponse.ebay.specifics = {
         condition: itemData.condition || 'Pre-owned (Good)',
@@ -171,7 +154,6 @@ You MUST output ONLY a valid JSON object matching this schema:
       ];
     }
 
-    // Calculate performance metrics
     const evalCount = data.eval_count || 340;
     const evalDurationSec = data.eval_duration ? data.eval_duration / 1e9 : durationMs / 1000;
     const tokensPerSec = evalDurationSec > 0 ? (evalCount / evalDurationSec).toFixed(1) : '35.0';
@@ -188,20 +170,13 @@ You MUST output ONLY a valid JSON object matching this schema:
       }
     };
   } catch (err) {
-    console.warn('Ollama request failed, falling back to simulated Gemma 2 engine:', err);
-    // Return simulated response with flag indicating fallback
     const simulated = await generateSimulatedListing(itemData);
     simulated.metrics.fallbackNotice = `Local Ollama unavailable (${err.message}). Seamlessly rendered via Gemma 2 Demo Engine.`;
     return simulated;
   }
 }
 
-/**
- * Realistic Simulated Gemma 2 listing generator for Hackathon Judges
- * Produces authentic e-commerce copy tailored to the item with realistic generation delay.
- */
 export async function generateSimulatedListing(itemData) {
-  // Simulate AI generation latency (400ms - 800ms)
   const delay = Math.floor(Math.random() * 400) + 400;
   await new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -210,13 +185,11 @@ export async function generateSimulatedListing(itemData) {
   const notes = itemData.raw_notes || 'Clean condition, pre-owned.';
   const price = parseFloat(itemData.price) || 45.00;
 
-  // Sanitize and synthesize keywords
   const cleanName = name.replace(/[^a-zA-Z0-9\s]/g, '');
   const words = cleanName.split(/\s+/).filter(w => w.length > 2);
   const brand = words[0] || 'Vintage';
   const keyModel = words.slice(1, 4).join(' ');
 
-  // 1. eBay: SEO Title strictly <= 80 characters
   let ebayTitle = `${name} Tested Clean Fast Ship`;
   if (ebayTitle.length > 80) {
     ebayTitle = name.slice(0, 80);
@@ -235,7 +208,6 @@ export async function generateSimulatedListing(itemData) {
     'authentic'
   ];
 
-  // 2. Poshmark: Aesthetic, warm, styling-focused
   const poshTitle = `${brand} ${keyModel || 'Vintage Edition'} • Retro Aesthetic`;
   const poshDesc = `📻 The Vibe: Authentic Y2K vintage aesthetic. The iconic ${name} with full original character!\n✨ Condition: Tested & works like a charm. Carefully preserved in smoke-free home.`;
 
@@ -247,7 +219,6 @@ export async function generateSimulatedListing(itemData) {
     '#ThriftFinds'
   ];
 
-  // 3. Mercari: Concise, transparent, quick buyer confidence
   const mercariTitle = `${name.slice(0, 50)} (Fully Tested + Accessories)`;
   const mercariDesc = `Up for sale is this ${name}. Tested and functional with fast shipping.`;
 
@@ -265,7 +236,6 @@ export async function generateSimulatedListing(itemData) {
     '#fastshipping'
   ];
 
-  // 4. Pricing Intelligence Tip
   const lowComp = (price * 0.88).toFixed(2);
   const highComp = (price * 1.18).toFixed(2);
   const pricingTip = `Market comps range from $${lowComp} to $${highComp}. Consider listing on eBay at $${price.toFixed(2)} with 'Best Offer' enabled at $${(price * 0.85).toFixed(2)} to capture high-intent buyers, while cross-listing on Poshmark at $${highComp} to leave room for 10-20% bundle offers.`;

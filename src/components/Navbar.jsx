@@ -30,7 +30,6 @@ export default function Navbar({
   const activeSyncState = syncState || driveState;
   const handleOpenSync = onOpenSyncModal || onOpenDriveModal;
 
-  // Authentic Google "G" icon
   const GoogleLogo = () => (
     <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -44,7 +43,6 @@ export default function Navbar({
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
         
-        {/* Brand & Status */}
         <div className="flex items-center gap-2 sm:gap-6 shrink-0">
           <button 
             type="button"
@@ -59,7 +57,6 @@ export default function Navbar({
             </span>
           </button>
 
-          {/* Discrete Engine Status Dot */}
           <button
             type="button"
             onClick={demoMode ? onToggleDemoMode : isOnline ? onOpenSettings : onOpenCorsModal}
@@ -90,7 +87,6 @@ export default function Navbar({
           </button>
         </div>
 
-        {/* Segmented Navigation Tabs (Desktop view) */}
         <nav className="hidden md:flex items-center p-1 bg-slate-100 dark:bg-slate-900 rounded-lg text-[13px] font-medium text-slate-600 dark:text-slate-400 transition-colors">
           <button
             type="button"
@@ -127,10 +123,7 @@ export default function Navbar({
           </button>
         </nav>
 
-        {/* Right Actions, Dark Mode Toggle & Google Drive Connect */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          
-          {/* Quick Demo Mode Badge */}
           <button
             type="button"
             onClick={onToggleDemoMode}
@@ -145,7 +138,6 @@ export default function Navbar({
             <span>{demoMode ? 'Judge Demo' : 'Local Ollama'}</span>
           </button>
 
-          {/* Theme Toggle (Dark / Light Mode) */}
           <button
             type="button"
             onClick={onToggleTheme}
@@ -160,7 +152,6 @@ export default function Navbar({
             )}
           </button>
 
-          {/* Help & CORS Guide */}
           <button
             type="button"
             onClick={onOpenCorsModal}
@@ -171,7 +162,6 @@ export default function Navbar({
             <HelpCircle className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
           </button>
 
-          {/* Settings */}
           <button
             type="button"
             onClick={onOpenSettings}
@@ -184,7 +174,6 @@ export default function Navbar({
 
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5"></div>
 
-          {/* Google 1-Click Cloud Sync Button in place of profile picture (JD) */}
           {activeSyncState?.isConnected ? (
             <button
               type="button"
@@ -231,7 +220,6 @@ export default function Navbar({
 
       </div>
 
-      {/* Mobile Sub-Navigation Bar */}
       <div className="md:hidden border-t border-slate-200/70 dark:border-slate-800/70 px-3 py-1.5 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md">
         <nav className="flex items-center w-full p-1 bg-slate-200/60 dark:bg-slate-950 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400">
           <button

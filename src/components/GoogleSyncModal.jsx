@@ -37,7 +37,6 @@ export default function GoogleSyncModal({
   const [justSynced, setJustSynced] = useState(false);
   const [showConfigDrawer, setShowConfigDrawer] = useState(false);
 
-  // Form for custom Firebase config if .env is not present
   const currentConfig = getFirebaseConfig();
   const [apiKey, setApiKey] = useState(currentConfig.apiKey || '');
   const [authDomain, setAuthDomain] = useState(currentConfig.authDomain || '');
@@ -47,7 +46,6 @@ export default function GoogleSyncModal({
 
   if (!isOpen) return null;
 
-  // Authentic Google "G" logo
   const GoogleLogo = () => (
     <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -62,7 +60,6 @@ export default function GoogleSyncModal({
     setErrorMessage(null);
     try {
       if (!syncState.isFirebaseConfigured && !apiKey.trim()) {
-        // Direct help if Firebase keys aren't added yet
         setShowConfigDrawer(true);
         setErrorMessage('Firebase configuration keys not found in .env. Enter your Firebase project keys below or use the 1-Click Instant Demo Account.');
         setIsSigningIn(false);
@@ -79,13 +76,11 @@ export default function GoogleSyncModal({
         setJustSynced(true);
         setTimeout(() => setJustSynced(false), 2000);
       } catch (syncErr) {
-        console.warn('Initial cloud sync note:', syncErr);
         if (syncErr.code === 'permission-denied' || syncErr.message?.includes('permission')) {
           setErrorMessage('Signed in to Google! Note: Please ensure your firestore.rules are published in Firebase Console to allow cloud reads/writes.');
         }
       }
     } catch (err) {
-      console.error('Google Sign In error:', err);
       if (err.code === 'auth/popup-closed-by-user') {
         setErrorMessage('Sign-in cancelled. Please try again.');
       } else if (err.code === 'auth/popup-blocked') {
@@ -167,7 +162,6 @@ export default function GoogleSyncModal({
         className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
@@ -191,16 +185,13 @@ export default function GoogleSyncModal({
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 text-sm flex-1 overflow-y-auto">
-          {/* Error Notice */}
           {errorMessage && (
             <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-800 dark:text-rose-300">
               {errorMessage}
             </div>
           )}
 
-          {/* Cross-Device Value Proposition Banner */}
           <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 flex items-start gap-3">
             <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5">
               <ArrowRightLeft className="w-4 h-4" />
@@ -215,11 +206,8 @@ export default function GoogleSyncModal({
             </div>
           </div>
 
-          {/* Connected State View */}
           {syncState?.isConnected ? (
             <div className="space-y-4">
-              
-              {/* Account Card */}
               <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   {syncState.user?.picture ? (
@@ -250,7 +238,6 @@ export default function GoogleSyncModal({
                   </div>
                 </div>
 
-                {/* Live Sync Badge */}
                 <div className="text-right shrink-0">
                   <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                     <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
@@ -264,7 +251,6 @@ export default function GoogleSyncModal({
                 </div>
               </div>
 
-              {/* Synced Elements Breakdown */}
               <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-xs space-y-2">
                 <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-500 dark:text-slate-400 block">
                   Synchronized Items (Real-Time Auto Sync)
@@ -293,7 +279,6 @@ export default function GoogleSyncModal({
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex items-center justify-between gap-3 pt-2">
                 <button
                   type="button"
@@ -331,10 +316,7 @@ export default function GoogleSyncModal({
 
             </div>
           ) : (
-            /* Disconnected State View */
             <div className="space-y-4">
-              
-              {/* TRUE 1-CLICK GOOGLE SIGN IN BUTTON */}
               <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 space-y-3">
                 <div className="space-y-1">
                   <span className="font-bold text-xs text-slate-900 dark:text-white block">
@@ -356,7 +338,6 @@ export default function GoogleSyncModal({
                 </button>
               </div>
 
-              {/* 1-Click Instant Demo Google Account */}
               <div className="p-4 rounded-xl border border-orange-200 dark:border-orange-900/60 bg-orange-50/50 dark:bg-orange-950/20 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -383,7 +364,6 @@ export default function GoogleSyncModal({
                 </button>
               </div>
 
-              {/* Optional Custom Firebase Config Accordion */}
               <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                 <button
                   type="button"
@@ -444,7 +424,6 @@ export default function GoogleSyncModal({
 
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end px-6 py-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"

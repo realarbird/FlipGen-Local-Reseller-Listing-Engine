@@ -36,7 +36,6 @@ export default function BatchGenerator({ ollamaStatus, config }) {
   const stopSignalRef = useRef(false);
   const fileInputRef = useRef(null);
 
-  // Load sample vintage items
   const handleLoadSampleBatch = () => {
     stopSignalRef.current = true;
     setIsProcessing(false);
@@ -60,7 +59,6 @@ export default function BatchGenerator({ ollamaStatus, config }) {
     });
   };
 
-  // Parse uploaded CSV
   const handleFileUpload = (file) => {
     if (!file) return;
 
@@ -103,7 +101,6 @@ export default function BatchGenerator({ ollamaStatus, config }) {
     });
   };
 
-  // Start sequential batch processing
   const startProcessing = async () => {
     if (items.length === 0) return;
 
@@ -217,7 +214,6 @@ export default function BatchGenerator({ ollamaStatus, config }) {
     });
   };
 
-  // Export Enriched CSV
   const handleExportCSV = () => {
     if (items.length === 0) return;
 
@@ -278,7 +274,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       
-      {/* Page Header */}
+      
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2">
         <div>
           <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
@@ -297,7 +293,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
           </p>
         </div>
 
-        {/* Quick Actions */}
+        
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
@@ -316,7 +312,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
         </div>
       </div>
 
-      {/* Upload Dropzone (if empty) */}
+      
       {items.length === 0 && (
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -365,11 +361,11 @@ export default function BatchGenerator({ ollamaStatus, config }) {
         </div>
       )}
 
-      {/* Batch Stats & Controls (when items loaded) */}
+      
       {items.length > 0 && (
         <div className="space-y-4">
           
-          {/* Summary Economics Bar */}
+          
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -422,7 +418,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
             </div>
           </div>
 
-          {/* Action Toolbar */}
+          
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 transition-colors">
             <div className="flex items-center gap-2 flex-wrap">
               {!isProcessing ? (
@@ -479,7 +475,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
             </div>
           </div>
 
-          {/* Table Container */}
+          
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
@@ -568,7 +564,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
         </div>
       )}
 
-      {/* Inspect Item Drawer / Modal */}
+      
       {selectedItem && selectedItem.generatedData && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-150"
@@ -596,7 +592,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
               </button>
             </div>
 
-            {/* eBay */}
+            
             <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
@@ -618,7 +614,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
               </p>
             </div>
 
-            {/* Poshmark */}
+            
             <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
@@ -647,7 +643,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
               </div>
             </div>
 
-            {/* Mercari */}
+            
             <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">

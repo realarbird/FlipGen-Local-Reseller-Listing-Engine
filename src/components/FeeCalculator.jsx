@@ -1,29 +1,25 @@
 import React from 'react';
-import { DollarSign, TrendingUp, Sparkles, AlertCircle, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Sparkles, ArrowUpRight } from 'lucide-react';
 
 export default function FeeCalculator({ price = 0, cost = 0, pricingTip = '' }) {
   const sellPrice = parseFloat(price) || 0;
   const itemCost = parseFloat(cost) || 0;
 
-  // 1. eBay calculation: 13.25% + $0.30 per transaction
   const ebayFee = sellPrice > 0 ? (sellPrice * 0.1325 + 0.30) : 0;
   const ebayNet = Math.max(0, sellPrice - ebayFee);
   const ebayProfit = ebayNet - itemCost;
   const ebayMargin = sellPrice > 0 ? ((ebayProfit / sellPrice) * 100).toFixed(0) : 0;
 
-  // 2. Poshmark calculation: Flat $2.95 under $15, else 20%
   const poshFee = sellPrice > 0 ? (sellPrice < 15 ? 2.95 : sellPrice * 0.20) : 0;
   const poshNet = Math.max(0, sellPrice - poshFee);
   const poshProfit = poshNet - itemCost;
   const poshMargin = sellPrice > 0 ? ((poshProfit / sellPrice) * 100).toFixed(0) : 0;
 
-  // 3. Mercari calculation: ~10% fee
   const mercariFee = sellPrice > 0 ? (sellPrice * 0.10) : 0;
   const mercariNet = Math.max(0, sellPrice - mercariFee);
   const mercariProfit = mercariNet - itemCost;
   const mercariMargin = sellPrice > 0 ? ((mercariProfit / sellPrice) * 100).toFixed(0) : 0;
 
-  // Identify top platform
   const profits = [
     { name: 'eBay', profit: ebayProfit, fee: ebayFee, net: ebayNet, margin: ebayMargin, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
     { name: 'Mercari', profit: mercariProfit, fee: mercariFee, net: mercariNet, margin: mercariMargin, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
@@ -54,7 +50,6 @@ export default function FeeCalculator({ price = 0, cost = 0, pricingTip = '' }) 
         )}
       </div>
 
-      {/* 3 Platform Comparison Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {profits.map((p) => {
           const isBest = p.name === highest.name && sellPrice > 0;
@@ -93,7 +88,6 @@ export default function FeeCalculator({ price = 0, cost = 0, pricingTip = '' }) 
         })}
       </div>
 
-      {/* Pricing Tip from Gemma 2 */}
       {pricingTip && (
         <div className="p-3.5 rounded-xl bg-indigo-500/5 border border-indigo-500/20 text-xs text-indigo-200 flex gap-2.5 items-start">
           <Sparkles className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />

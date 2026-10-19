@@ -1,7 +1,3 @@
-// Firebase Authentication & Cloud Firestore Synchronization Service for FlipGen
-// Provides true 1-click Google Sign-in and real-time cross-device sync between
-// laptops (running local Ollama at $0 cost) and mobile phones (viewing listings & inventory).
-
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -23,7 +19,6 @@ const LAST_SYNC_KEY = 'flipgen_last_sync_timestamp';
 const CLOUD_MOCK_STORAGE = 'flipgen_cloud_mock_storage';
 const FIREBASE_CONFIG_STORAGE = 'flipgen_firebase_custom_config';
 
-// Default project configuration for FlipGen Reseller Engine
 const DEFAULT_FIREBASE_CONFIG = {
   apiKey: "AIzaSyDzdj8ZVzySsTk0-UnvimcLPrNw2yjwd0U",
   authDomain: "flipgen-reseller-engine.firebaseapp.com",
@@ -33,7 +28,6 @@ const DEFAULT_FIREBASE_CONFIG = {
   appId: "1:723388573425:web:97736acbb73fc56cc32b50"
 };
 
-// 1. Read Firebase Config from Vite environment, LocalStorage override, or Default
 export function getFirebaseConfig() {
   const envConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY || DEFAULT_FIREBASE_CONFIG.apiKey,
@@ -57,7 +51,6 @@ export function getFirebaseConfig() {
       }
     }
   } catch (e) {
-    // Ignore invalid json
   }
 
   return envConfig;
@@ -71,7 +64,6 @@ export function saveCustomFirebaseConfig(config) {
   }
 }
 
-// 2. Initialize Firebase instances lazily and safely
 let firebaseApp = null;
 let firebaseAuth = null;
 let firestoreDb = null;
@@ -90,7 +82,6 @@ export function getFirebaseInstances() {
       firebaseAuth = getAuth(firebaseApp);
       firestoreDb = getFirestore(firebaseApp);
     } catch (err) {
-      console.error('Firebase initialization error:', err);
       return { isConfigured: false, app: null, auth: null, db: null, error: err };
     }
   }
@@ -98,7 +89,6 @@ export function getFirebaseInstances() {
   return { isConfigured: true, app: firebaseApp, auth: firebaseAuth, db: firestoreDb };
 }
 
-// 3. State Subscription
 const syncListeners = new Set();
 
 function notifyListeners(state) {
@@ -106,7 +96,6 @@ function notifyListeners(state) {
     try {
       listener(state);
     } catch (err) {
-      console.error('Error notifying sync listener:', err);
     }
   });
 }
@@ -144,7 +133,6 @@ export function subscribeToSync(listener) {
   return () => syncListeners.delete(listener);
 }
 
-// 4. One-Click Google Sign In
 export async function signInWithGoogle() {
   const { isConfigured, auth } = getFirebaseInstances();
 
@@ -188,7 +176,6 @@ export async function signInWithGoogle() {
   }
 }
 
-// 5. One-Click Instant Demo Account (Sandbox Sync)
 export async function signInWithDemoAccount() {
   const demoUser = {
     uid: 'demo-reseller-12345',
@@ -211,7 +198,6 @@ export async function signInWithDemoAccount() {
     isSyncing: true
   });
 
-  // Simulated roundtrip
   await new Promise((r) => setTimeout(r, 400));
 
   notifyListeners({
@@ -226,14 +212,12 @@ export async function signInWithDemoAccount() {
   return demoUser;
 }
 
-// 6. Sign Out
 export async function signOutAccount() {
   const { auth } = getFirebaseInstances();
   if (auth) {
     try {
       await fbSignOut(auth);
     } catch (e) {
-      console.warn('Firebase signout note:', e);
     }
   }
 
@@ -250,7 +234,6 @@ export async function signOutAccount() {
   });
 }
 
-// 7. Pull Latest Data from Cloud on Startup
 export async function pullLatestFromCloud() {
   const state = getSyncState();
   if (!state.isConnected || !state.user) return null;
@@ -269,13 +252,11 @@ export async function pullLatestFromCloud() {
     } else {
       const { db } = getFirebaseInstances();
       if (db && state.user.uid) {
-        // Primary location
         const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           cloudData = docSnap.data();
         } else {
-          // Fallback location
           const rootRef = doc(db, 'users', state.user.uid);
           const rootSnap = await getDoc(rootRef);
           if (rootSnap.exists() && rootSnap.data().archive) {
@@ -294,23 +275,13 @@ export async function pullLatestFromCloud() {
       lastSyncedAt: now
     });
 
-    if (cloudData) {
-      console.log('FlipGen Cloud Sync: Successfully pulled cloud data for', state.user.email, {
-        archiveCount: Array.isArray(cloudData.archive) ? cloudData.archive.length : 0,
-        theme: cloudData.theme,
-        baseUrl: cloudData.baseUrl
-      });
-    }
-
     return cloudData;
   } catch (err) {
-    console.error('Failed to pull data from cloud:', err);
     notifyListeners({ ...state, isSyncing: false });
     return null;
   }
 }
 
-// 8. Push Local Updates to Cloud (Preferences, Ollama URL, Theme, Sales Archive)
 export async function pushToCloud(payload) {
   const state = getSyncState();
   if (!state.isConnected || !state.user) return false;
@@ -336,7 +307,6 @@ export async function pushToCloud(payload) {
         const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
         await setDoc(docRef, fullPayload, { merge: true });
 
-        // Also update root user document
         const rootRef = doc(db, 'users', state.user.uid);
         await setDoc(rootRef, {
           email: state.user.email,
@@ -357,20 +327,13 @@ export async function pushToCloud(payload) {
       lastSyncedAt: now
     });
 
-    console.log('FlipGen Cloud Sync: Pushed bundle to cloud successfully at', now, {
-      itemsSynced: Array.isArray(fullPayload.archive) ? fullPayload.archive.length : 0,
-      theme: fullPayload.theme
-    });
-
     return true;
   } catch (err) {
-    console.error('Failed to push to cloud:', err);
     notifyListeners({ ...state, isSyncing: false });
     return false;
   }
 }
 
-// 9. Real-Time Snapshot Listener for Instant Cross-Device Sync (Phone ↔ Laptop)
 export function listenToLiveCloudUpdates(onUpdateCallback) {
   const state = getSyncState();
   if (!state.isConnected || !state.user || state.isDemo) {
@@ -389,18 +352,14 @@ export function listenToLiveCloudUpdates(onUpdateCallback) {
         const data = docSnap.data();
         onUpdateCallback(data);
       }
-    }, (error) => {
-      console.warn('Firestore live listener note:', error);
-    });
+    }, () => {});
 
     return unsubscribe;
   } catch (err) {
-    console.warn('Could not attach Firestore live listener:', err);
     return () => {};
   }
 }
 
-// 10. Auto-detect auth state changes from Firebase
 export function initAuthObserver(onUserChange) {
   const { auth, isConfigured } = getFirebaseInstances();
   if (!isConfigured || !auth) return () => {};

@@ -9,7 +9,6 @@
   }
 }
 
-/* Custom scrollbars */
 .custom-scrollbar::-webkit-scrollbar,
 ::-webkit-scrollbar {
   width: 6px;
@@ -29,7 +28,6 @@
   background: #cbd5e1;
 }
 
-/* Subtle tactile paper elevation */
 .paper-card {
   background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.9);

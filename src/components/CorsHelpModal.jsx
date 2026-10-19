@@ -35,7 +35,6 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
         className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-xs">
@@ -59,9 +58,7 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-6 space-y-5 flex-1 overflow-y-auto text-sm">
-          {/* Quick callout */}
           <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200 text-xs flex gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div>
@@ -72,7 +69,6 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
             </div>
           </div>
 
-          {/* Quick 1-Liner: Mac Fix */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 block mb-2">
               macOS Quick Fix (Set Environment & Restart Ollama)
@@ -101,7 +97,6 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
             </div>
           </div>
 
-          {/* Platform Tabs */}
           <div>
             <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-800 mb-4">
               <button
@@ -139,7 +134,6 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
               </button>
             </div>
 
-            {/* Tab: Mac */}
             {activeTab === 'mac' && (
               <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
                 <p>1. Quit the Ollama icon from your top menu bar.</p>
@@ -162,7 +156,6 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
               </div>
             )}
 
-            {/* Tab: Linux */}
             {activeTab === 'linux' && (
               <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
                 <p>1. Edit the systemd service configuration for Ollama:</p>
@@ -181,7 +174,6 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
               </div>
             )}
 
-            {/* Tab: Windows */}
             {activeTab === 'win' && (
               <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
                 <p>1. Exit the Ollama background process from your system tray.</p>
@@ -201,7 +193,6 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
             )}
           </div>
 
-          {/* Hackathon Judge Fallback Banner */}
           <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
               <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-xs">
@@ -225,7 +216,6 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end px-6 py-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 shrink-0">
           <button
             type="button"

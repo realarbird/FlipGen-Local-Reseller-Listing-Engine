@@ -15,7 +15,7 @@ import { generateListing } from '../services/ollamaService';
 import { saveItemToArchive } from '../services/ledgerService';
 
 export default function SingleItemGenerator({ ollamaStatus, config, onNavigateToArchive, onItemSaved }) {
-  const initialPreset = PRESET_ITEMS[0]; // Electronics (Sony Walkman)
+  const initialPreset = PRESET_ITEMS[0];
 
   const [activePresetKey, setActivePresetKey] = useState(initialPreset.key);
   const [specimenId, setSpecimenId] = useState(initialPreset.specimen);
@@ -38,7 +38,6 @@ export default function SingleItemGenerator({ ollamaStatus, config, onNavigateTo
     mode: 'Zero cloud cost'
   });
 
-  // Current active channel data
   const [channelData, setChannelData] = useState({
     specifics: initialPreset.specifics,
     ebay: initialPreset.ebay,
@@ -47,14 +46,12 @@ export default function SingleItemGenerator({ ollamaStatus, config, onNavigateTo
     pricing_tip: ''
   });
 
-  // Calculate Unit Economics
   const priceNum = parseFloat(formData.price) || 0;
   const cogsNum = parseFloat(formData.cogs) || 0;
   const ebayFee = priceNum * 0.1325 + (priceNum > 0 ? 0.30 : 0);
   const netProfit = Math.max(0, priceNum - cogsNum - ebayFee);
   const roi = cogsNum > 0 ? ((netProfit / cogsNum) * 100).toFixed(1) : '0.0';
 
-  // Preset switch handler
   const handleSelectPreset = (preset) => {
     setActivePresetKey(preset.key);
     setSpecimenId(preset.specimen);
@@ -84,7 +81,6 @@ export default function SingleItemGenerator({ ollamaStatus, config, onNavigateTo
     setSavedToLedger(false);
   };
 
-  // Generate / Synthesize Listings
   const handleGenerate = async (e) => {
     if (e) e.preventDefault();
     if (!formData.title.trim()) return;
@@ -130,7 +126,6 @@ export default function SingleItemGenerator({ ollamaStatus, config, onNavigateTo
           mode: config.demoMode ? 'Simulated Gemma 2' : 'Local Gemma 2 ($0 Cost)'
         });
 
-        // Fire festive celebration confetti
         confetti({
           particleCount: 45,
           spread: 60,
@@ -145,7 +140,6 @@ export default function SingleItemGenerator({ ollamaStatus, config, onNavigateTo
     }
   };
 
-  // Copy helper
   const handleCopy = (text, key) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
@@ -153,7 +147,6 @@ export default function SingleItemGenerator({ ollamaStatus, config, onNavigateTo
     setTimeout(() => setCopiedKey(null), 1800);
   };
 
-  // Copy All Listings to Clipboard
   const handleCopyAll = () => {
     const fullBundle = `=== EBAY LISTING ===
 Title (${channelData.ebay?.title?.length || 0}/80):
@@ -188,7 +181,6 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
     handleCopy(fullBundle, 'copy-all');
   };
 
-  // Save to Archive Ledger
   const handleSaveToLedger = () => {
     saveItemToArchive({
       specimen: specimenId,
@@ -215,7 +207,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
   return (
     <div className="flex flex-col gap-8 animate-in fade-in duration-200">
       
-      {/* Clean Page Header & Presets */}
+      
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2">
         <div>
           <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
@@ -234,7 +226,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
           </p>
         </div>
 
-        {/* Quick Preset Selector */}
+        
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mr-1 flex items-center gap-1">
             <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
@@ -260,10 +252,10 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
         </div>
       </div>
 
-      {/* 2-Column Responsive Workspace Grid */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* LEFT COLUMN: Input Flow (5 cols) */}
+        
         <section className="lg:col-span-5 flex flex-col gap-6">
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 flex flex-col gap-5 transition-colors">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -273,7 +265,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               <span className="text-xs text-slate-600 dark:text-slate-400">Step 1 of 2</span>
             </div>
 
-            {/* Working Title with Minimalist Counter */}
+            
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
                 <label className="font-semibold text-slate-800 dark:text-slate-200" htmlFor="workingTitle">
@@ -304,7 +296,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               />
             </div>
 
-            {/* Category & Condition Dropdowns */}
+            
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-800 dark:text-slate-200" htmlFor="conditionSelect">
@@ -342,7 +334,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               </div>
             </div>
 
-            {/* Unit Financials & Profit Bar */}
+            
             <div className="p-3.5 bg-slate-50 dark:bg-slate-950/70 rounded-lg border border-slate-200/80 dark:border-slate-800 flex flex-col gap-2.5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -388,7 +380,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 </div>
               </div>
 
-              {/* Profit & ROI Divider */}
+              
               <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
                 <span className="text-slate-600 dark:text-slate-400">Est. Net Profit (eBay ~13.25% fee)</span>
                 <div className="flex items-center gap-1.5">
@@ -402,7 +394,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               </div>
             </div>
 
-            {/* Condition Observations / Raw Notes */}
+            
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
                 <label className="font-semibold text-slate-800 dark:text-slate-200" htmlFor="rawNotes">
@@ -426,7 +418,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               />
             </div>
 
-            {/* Primary CTA Button */}
+            
             <button
               id="generateBtn"
               type="button"
@@ -449,10 +441,10 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
           </div>
         </section>
 
-        {/* RIGHT COLUMN: Output Preview & Tailored Channels (7 cols) */}
+        
         <section className="lg:col-span-7 flex flex-col gap-5" id="generationResults">
           
-          {/* Header Bar for Output Desk */}
+          
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
             <div>
               <div className="flex items-center gap-2">
@@ -507,7 +499,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
             </div>
           </div>
 
-          {/* Channel 1: eBay Marketplace (High Precision SEO) */}
+          
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
             <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -547,7 +539,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
             </div>
 
             <div className="p-5 flex flex-col gap-4">
-              {/* Title */}
+              
               <div>
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-1">
                   Optimized Title
@@ -557,7 +549,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 </p>
               </div>
 
-              {/* Specifics Table */}
+              
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-2 px-3 rounded-lg bg-slate-50 dark:bg-slate-950/70 border border-slate-100 dark:border-slate-800">
                 <div>
                   <span className="text-slate-600 dark:text-slate-400 text-[11px] block">Condition</span>
@@ -585,7 +577,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 </div>
               </div>
 
-              {/* Description */}
+              
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
@@ -608,7 +600,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 </p>
               </div>
 
-              {/* Keywords Tags */}
+              
               {channelData.ebay?.keywords && channelData.ebay.keywords.length > 0 && (
                 <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                   <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 mr-1">
@@ -629,7 +621,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
             </div>
           </div>
 
-          {/* Channel 2: Poshmark Closet (Curated & Tags) */}
+          
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
             <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -674,7 +666,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 {channelData.poshmark?.description}
               </div>
 
-              {/* Tags */}
+              
               {channelData.poshmark?.tags && (
                 <div className="flex items-center gap-1.5 flex-wrap pt-1">
                   {channelData.poshmark.tags.map((tag, i) => (
@@ -692,7 +684,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
             </div>
           </div>
 
-          {/* Channel 3: Mercari (Concise & Fast Dispatch) */}
+          
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
             <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -733,7 +725,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 </p>
               </div>
 
-              {/* Bullet Points */}
+              
               <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 font-sans">
                 {channelData.mercari?.bullets ? (
                   channelData.mercari.bullets.map((b, idx) => (
@@ -756,7 +748,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 )}
               </ul>
 
-              {/* Hashtags */}
+              
               {channelData.mercari?.hashtags && (
                 <div className="flex items-center gap-1.5 flex-wrap pt-1">
                   {channelData.mercari.hashtags.map((ht, i) => (
