@@ -152,18 +152,6 @@ export default function App() {
         isOpen={isCorsModalOpen}
         onClose={() => setIsCorsModalOpen(false)}
         onEnableDemoMode={() => setConfig((prev) => ({ ...prev, demoMode: true }))}
-        currentUrl={config.baseUrl}
-        onSaveTunnelUrl={(tunnelUrl) => {
-          handleSaveConfig({
-            ...config,
-            baseUrl: tunnelUrl,
-            demoMode: false
-          });
-        }}
-        onOpenSettings={() => {
-          setIsCorsModalOpen(false);
-          setIsSettingsModalOpen(true);
-        }}
       />
 
       <SettingsModal

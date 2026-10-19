@@ -141,31 +141,30 @@ ollama run gemma2
 
 ---
 
-## 🔒 Connecting Render (HTTPS) to Local Ollama: Mixed Content Guide
+## 🔒 Connecting Local Ollama with Render
 
-When FlipGen is hosted on Render, it is served over **`https://`**. Web browsers (Chrome, Safari, Firefox) enforce a security rule called **Mixed Content**, which prevents an `https://` webpage from directly making client-side requests to an unencrypted `http://localhost:11434` address.
+When connecting FlipGen (hosted on Render) directly to your local Ollama instance:
 
-Here are the 3 ways to use FlipGen on Render:
+### 1. Enable CORS on Ollama
+- **macOS (Recommended 1-Liner):**
+  ```bash
+  launchctl setenv OLLAMA_ORIGINS "*" && pkill -f Ollama && open -a Ollama
+  ```
+- **Terminal (All Platforms):**
+  ```bash
+  OLLAMA_ORIGINS="*" ollama serve
+  ```
+  *(Note: If you see `bind: address already in use`, quit the running Ollama menu bar app first).*
 
-### Option 1: 1-Command Free HTTPS Tunnel (Recommended for Real Local Gemma 2)
-Create a secure, temporary HTTPS tunnel to your local Ollama port:
-```bash
-npx cloudflared tunnel --url http://localhost:11434
-# OR: npx localtunnel --port 11434
-```
-1. Cloudflare will output a public HTTPS URL (e.g. `https://random-words.trycloudflare.com`).
-2. Open your Render site, click **Settings (⚙️)** in the top right.
-3. Paste that HTTPS URL into **Ollama Host URL** and click **Save Preferences**.
-4. Render can now communicate with your local Gemma 2 instance securely over HTTPS!
-
-### Option 2: Allow Insecure Content in Chrome (No Tunnel Needed)
-1. In your browser on the Render app, click the **tune / padlock icon** to the left of the URL in the address bar.
+### 2. Allow Localhost in Chrome Site Settings (Render HTTPS)
+To allow the Render website to call `http://localhost:11434` directly without browser blocking:
+1. In your browser on the Render site, click the **tune / padlock icon** next to the URL in the address bar.
 2. Click **Site settings**.
-3. Change **Insecure content** from *Block (default)* to **Allow**.
-4. Reload the page (ensure Ollama was started with `OLLAMA_ORIGINS="*" ollama serve`).
+3. Find **Insecure content** and change it from *Block (default)* to **Allow**.
+4. Reload the page! The status badge will turn green (**Ollama Online**).
 
-### Option 3: Judge Demo Mode (Zero Setup)
-FlipGen includes a built-in **"Judge Demo Mode"** (toggleable in the navbar) that outputs authentic, realistic Gemma 2 listings instantly without needing Ollama or a tunnel installed. Perfect for hackathon judges reviewing the deployment on Render!
+### 3. Zero-Setup Judge Demo Mode
+Hackathon judges can simply toggle **"Judge Demo Mode"** in the top navbar to test the entire application with realistic Gemma 2 outputs without needing Ollama or a GPU.
 
 ---
 

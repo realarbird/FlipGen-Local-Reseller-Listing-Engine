@@ -47,9 +47,7 @@ export async function checkOllamaConnection(baseUrl = DEFAULT_OLLAMA_URL) {
       connected: false,
       models: [],
       isMixedContent,
-      error: isMixedContent 
-        ? 'Mixed Content Block: Browser blocked http://localhost from HTTPS (Render). Use an HTTPS tunnel or Demo Mode.' 
-        : (err.name === 'AbortError' ? 'Connection timed out' : err.message)
+      error: err.name === 'AbortError' ? 'Connection timed out' : err.message
     };
   }
 }
