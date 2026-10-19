@@ -69,15 +69,28 @@ export default function GoogleSyncModal({
       }
 
       await signInWithGoogle();
-      await onManualSync();
-      setJustSynced(true);
-      setTimeout(() => setJustSynced(false), 2000);
+      try {
+        await onManualSync();
+        setJustSynced(true);
+        setTimeout(() => setJustSynced(false), 2000);
+      } catch (syncErr) {
+        console.warn('Initial cloud sync note:', syncErr);
+        if (syncErr.code === 'permission-denied' || syncErr.message?.includes('permission')) {
+          setErrorMessage('Signed in to Google! Note: Please publish your firestore.rules in Firebase Console to enable Firestore cloud storage.');
+        }
+      }
     } catch (err) {
       console.error('Google Sign In error:', err);
       if (err.code === 'auth/popup-closed-by-user') {
         setErrorMessage('Sign-in cancelled. Please try again.');
+      } else if (err.code === 'auth/popup-blocked') {
+        setErrorMessage('Popup blocked by your browser. Please allow popups for this site and try again.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setErrorMessage('Google Sign-In is not enabled yet in Firebase Console. Go to Authentication > Sign-in method, click Google, toggle Enable, and click Save.');
       } else if (err.code === 'auth/unauthorized-domain') {
-        setErrorMessage('Firebase: Domain not authorized. Add your domain to Firebase Console > Authentication > Settings > Authorized Domains.');
+        setErrorMessage(`Firebase: Domain "${window.location.hostname}" is not authorized. In Firebase Console, go to Authentication > Settings > Authorized domains and add "${window.location.hostname}".`);
+      } else if (err.code === 'auth/network-request-failed') {
+        setErrorMessage('Network request failed. Please check your internet connection.');
       } else {
         setErrorMessage(err.message || 'Failed to sign in with Google');
       }
