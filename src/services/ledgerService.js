@@ -121,21 +121,50 @@ export function exportArchiveToCSV() {
   document.body.removeChild(link);
 }
 
+export function syncLocalWithCloudArchive(cloudItems) {
+  try {
+    if (!Array.isArray(cloudItems)) return getArchiveItems();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudItems));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('flipgen_ledger_updated', { detail: cloudItems }));
+    }
+    return cloudItems;
+  } catch (e) {
+    return getArchiveItems();
+  }
+}
+
 export function importArchiveItemsFromCloud(cloudItems) {
   try {
-    if (!Array.isArray(cloudItems) || cloudItems.length === 0) return getArchiveItems();
+    if (!Array.isArray(cloudItems)) return getArchiveItems();
     const current = getArchiveItems();
-    const existingKeys = new Set(current.map(i => `${i.specimen}-${i.title}`));
-    const merged = [...current];
 
+    if (current.length === 1 && current[0].id === 'specimen-98-w42' && cloudItems.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudItems));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('flipgen_ledger_updated', { detail: cloudItems }));
+      }
+      return cloudItems;
+    }
+
+    const itemMap = new Map();
     for (const item of cloudItems) {
-      const key = `${item.specimen}-${item.title}`;
-      if (!existingKeys.has(key)) {
-        merged.push(item);
-        existingKeys.add(key);
+      if (item) {
+        const key = item.id || `${item.specimen}-${item.title}`;
+        itemMap.set(key, item);
       }
     }
 
+    for (const item of current) {
+      if (item) {
+        const key = item.id || `${item.specimen}-${item.title}`;
+        if (!itemMap.has(key)) {
+          itemMap.set(key, item);
+        }
+      }
+    }
+
+    const merged = Array.from(itemMap.values());
     localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('flipgen_ledger_updated', { detail: merged }));
@@ -145,3 +174,4 @@ export function importArchiveItemsFromCloud(cloudItems) {
     return getArchiveItems();
   }
 }
+

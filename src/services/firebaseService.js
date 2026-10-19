@@ -13,6 +13,14 @@ import {
   setDoc, 
   onSnapshot 
 } from 'firebase/firestore';
+import { getArchiveItems, importArchiveItemsFromCloud } from './ledgerService';
+
+function sanitizeData(data) {
+  if (data === undefined) return null;
+  return JSON.parse(JSON.stringify(data));
+}
+
+let currentLastError = null;
 
 const AUTH_STORAGE_KEY = 'flipgen_auth_user';
 const LAST_SYNC_KEY = 'flipgen_last_sync_timestamp';
@@ -123,6 +131,7 @@ export function getSyncState() {
     isDemo: isDemo,
     lastSyncedAt: lastSync,
     isSyncing: false,
+    lastError: currentLastError,
     isFirebaseConfigured: isConfigured
   };
 }
@@ -234,11 +243,12 @@ export async function signOutAccount() {
   });
 }
 
-export async function pullLatestFromCloud() {
+export async function pullLatestFromCloud(options = {}) {
+  const { throwOnError = false } = options;
   const state = getSyncState();
   if (!state.isConnected || !state.user) return null;
 
-  notifyListeners({ ...state, isSyncing: true });
+  notifyListeners({ ...state, isSyncing: true, lastError: null });
 
   try {
     let cloudData = null;
@@ -252,15 +262,41 @@ export async function pullLatestFromCloud() {
     } else {
       const { db } = getFirebaseInstances();
       if (db && state.user.uid) {
-        const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          cloudData = docSnap.data();
-        } else {
+        let rootData = null;
+        let subData = null;
+        let fetchErr = null;
+
+        try {
           const rootRef = doc(db, 'users', state.user.uid);
           const rootSnap = await getDoc(rootRef);
-          if (rootSnap.exists() && rootSnap.data().archive) {
-            cloudData = rootSnap.data();
+          if (rootSnap.exists()) {
+            rootData = rootSnap.data();
+          }
+        } catch (e) {
+          fetchErr = e;
+        }
+
+        try {
+          const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            subData = docSnap.data();
+          }
+        } catch (e) {
+          if (!fetchErr) fetchErr = e;
+        }
+
+        if (subData && rootData) {
+          const rootTime = new Date(rootData.syncedAt || 0).getTime();
+          const subTime = new Date(subData.syncedAt || 0).getTime();
+          cloudData = subTime >= rootTime ? subData : rootData;
+        } else {
+          cloudData = subData || rootData || null;
+        }
+
+        if (!cloudData && fetchErr && !rootData && !subData) {
+          if (fetchErr.code === 'permission-denied' || fetchErr.message?.includes('permission')) {
+            throw fetchErr;
           }
         }
       }
@@ -268,69 +304,120 @@ export async function pullLatestFromCloud() {
 
     const now = new Date().toISOString();
     localStorage.setItem(LAST_SYNC_KEY, now);
+    currentLastError = null;
 
     notifyListeners({
       ...getSyncState(),
       isSyncing: false,
-      lastSyncedAt: now
+      lastSyncedAt: now,
+      lastError: null
     });
 
     return cloudData;
   } catch (err) {
-    notifyListeners({ ...state, isSyncing: false });
+    currentLastError = err.message || 'Failed to pull cloud data';
+    notifyListeners({ ...state, isSyncing: false, lastError: currentLastError });
+    if (throwOnError) throw err;
     return null;
   }
 }
 
-export async function pushToCloud(payload) {
+export async function pushToCloud(payload, options = {}) {
+  const { throwOnError = false } = options;
   const state = getSyncState();
   if (!state.isConnected || !state.user) return false;
 
-  notifyListeners({ ...state, isSyncing: true });
+  notifyListeners({ ...state, isSyncing: true, lastError: null });
 
   try {
+    const rawArchive = payload && 'archive' in payload ? payload.archive : getArchiveItems();
     const fullPayload = {
       ...payload,
+      archive: rawArchive,
+      archiveCount: Array.isArray(rawArchive) ? rawArchive.length : 0,
       appName: 'FlipGen Reseller Engine',
       version: '1.0.0',
       syncedAt: new Date().toISOString(),
       userEmail: state.user.email,
+      displayName: state.user.name,
       uid: state.user.uid
     };
 
+    const cleanPayload = sanitizeData(fullPayload);
+
     if (state.isDemo) {
       await new Promise((r) => setTimeout(r, 300));
-      localStorage.setItem(CLOUD_MOCK_STORAGE, JSON.stringify(fullPayload));
+      localStorage.setItem(CLOUD_MOCK_STORAGE, JSON.stringify(cleanPayload));
     } else {
       const { db } = getFirebaseInstances();
       if (db && state.user.uid) {
-        const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
-        await setDoc(docRef, fullPayload, { merge: true });
+        let rootSuccess = false;
+        let subSuccess = false;
+        let rootErr = null;
+        let subErr = null;
 
-        const rootRef = doc(db, 'users', state.user.uid);
-        await setDoc(rootRef, {
-          email: state.user.email,
-          displayName: state.user.name,
-          updatedAt: fullPayload.syncedAt,
-          theme: fullPayload.theme || 'light',
-          archiveCount: Array.isArray(fullPayload.archive) ? fullPayload.archive.length : 0
-        }, { merge: true });
+        try {
+          const rootRef = doc(db, 'users', state.user.uid);
+          await setDoc(rootRef, cleanPayload, { merge: true });
+          rootSuccess = true;
+        } catch (e) {
+          rootErr = e;
+        }
+
+        try {
+          const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
+          await setDoc(docRef, cleanPayload, { merge: true });
+          subSuccess = true;
+        } catch (e) {
+          subErr = e;
+        }
+
+        if (!rootSuccess && !subSuccess) {
+          throw (rootErr || subErr || new Error('Failed to save to Firestore. Check permissions.'));
+        }
       }
     }
 
     const now = new Date().toISOString();
     localStorage.setItem(LAST_SYNC_KEY, now);
+    currentLastError = null;
 
     notifyListeners({
       ...getSyncState(),
       isSyncing: false,
-      lastSyncedAt: now
+      lastSyncedAt: now,
+      lastError: null
     });
 
     return true;
   } catch (err) {
-    notifyListeners({ ...state, isSyncing: false });
+    currentLastError = err.message || 'Failed to sync with cloud';
+    notifyListeners({ ...state, isSyncing: false, lastError: currentLastError });
+    if (throwOnError) throw err;
     return false;
+  }
+}
+
+export async function syncArchiveWithCloud() {
+  const state = getSyncState();
+  if (!state.isConnected) {
+    throw new Error('Please connect your Google account to sync your archive.');
+  }
+
+  notifyListeners({ ...state, isSyncing: true, lastError: null });
+
+  try {
+    const cloudData = await pullLatestFromCloud({ throwOnError: true });
+    let merged = getArchiveItems();
+    if (cloudData && Array.isArray(cloudData.archive)) {
+      merged = importArchiveItemsFromCloud(cloudData.archive);
+    }
+    await pushToCloud({ archive: merged }, { throwOnError: true });
+    return { success: true, items: merged };
+  } catch (err) {
+    currentLastError = err.message || 'Sync failed';
+    notifyListeners({ ...getSyncState(), isSyncing: false, lastError: currentLastError });
+    throw err;
   }
 }
 
@@ -345,19 +432,39 @@ export function listenToLiveCloudUpdates(onUpdateCallback) {
     return () => {};
   }
 
+  let unsubSub = null;
+  let unsubRoot = null;
+
   try {
-    const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        onUpdateCallback(data);
+    const rootRef = doc(db, 'users', state.user.uid);
+    unsubRoot = onSnapshot(rootRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data && (Array.isArray(data.archive) || data.baseUrl || data.theme)) {
+          onUpdateCallback(data);
+        }
       }
     }, () => {});
-
-    return unsubscribe;
-  } catch (err) {
-    return () => {};
+  } catch (e) {
   }
+
+  try {
+    const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
+    unsubSub = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data && (Array.isArray(data.archive) || data.baseUrl || data.theme)) {
+          onUpdateCallback(data);
+        }
+      }
+    }, () => {});
+  } catch (e) {
+  }
+
+  return () => {
+    if (typeof unsubRoot === 'function') unsubRoot();
+    if (typeof unsubSub === 'function') unsubSub();
+  };
 }
 
 export function initAuthObserver(onUserChange) {

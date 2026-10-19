@@ -16,10 +16,15 @@ import {
   subscribeToSync, 
   pullLatestFromCloud, 
   pushToCloud,
+  syncArchiveWithCloud,
   listenToLiveCloudUpdates,
   initAuthObserver
 } from './services/firebaseService';
-import { getArchiveItems, importArchiveItemsFromCloud } from './services/ledgerService';
+import { 
+  getArchiveItems, 
+  importArchiveItemsFromCloud, 
+  syncLocalWithCloudArchive 
+} from './services/ledgerService';
 import { Sparkles, Terminal } from 'lucide-react';
 
 export default function App() {
@@ -77,9 +82,11 @@ export default function App() {
               temperature: cloudData.temperature ?? prev.temperature
             }));
           }
-          if (Array.isArray(cloudData.archive) && cloudData.archive.length > 0) {
+          if (Array.isArray(cloudData.archive)) {
             importArchiveItemsFromCloud(cloudData.archive);
           }
+        } else {
+          await pushToCloud({ archive: getArchiveItems() });
         }
       } catch (e) {
       }
@@ -105,8 +112,8 @@ export default function App() {
               temperature: cloudData.temperature ?? prev.temperature
             }));
           }
-          if (Array.isArray(cloudData.archive) && cloudData.archive.length > 0) {
-            importArchiveItemsFromCloud(cloudData.archive);
+          if (Array.isArray(cloudData.archive)) {
+            syncLocalWithCloudArchive(cloudData.archive);
           }
         }
       });
@@ -158,7 +165,7 @@ export default function App() {
               }));
               verifyConnection(cloudData.baseUrl);
             }
-            if (Array.isArray(cloudData.archive) && cloudData.archive.length > 0) {
+            if (Array.isArray(cloudData.archive)) {
               importArchiveItemsFromCloud(cloudData.archive);
             }
           }
@@ -266,6 +273,9 @@ export default function App() {
           <SalesArchive
             onNavigateToListing={() => setActiveView('single')}
             onArchiveChanged={() => handlePushToCloud()}
+            syncState={syncState}
+            onSyncCloud={syncArchiveWithCloud}
+            onOpenSyncModal={() => setIsSyncModalOpen(true)}
           />
         )}
       </main>
@@ -289,7 +299,7 @@ export default function App() {
         isOpen={isSyncModalOpen}
         onClose={() => setIsSyncModalOpen(false)}
         syncState={syncState}
-        onManualSync={handlePushToCloud}
+        onManualSync={syncArchiveWithCloud}
         currentPreferences={{
           theme: theme === 'dark' ? 'Dark' : 'Light',
           baseUrl: config.baseUrl,

@@ -19,11 +19,9 @@ import {
   signInWithDemoAccount, 
   signOutAccount, 
   pushToCloud,
-  pullLatestFromCloud,
   getFirebaseConfig,
   saveCustomFirebaseConfig
 } from '../services/firebaseService';
-import { importArchiveItemsFromCloud } from '../services/ledgerService';
 
 export default function GoogleSyncModal({
   isOpen,
@@ -68,16 +66,14 @@ export default function GoogleSyncModal({
 
       await signInWithGoogle();
       try {
-        const cloudData = await pullLatestFromCloud();
-        if (cloudData && Array.isArray(cloudData.archive) && cloudData.archive.length > 0) {
-          importArchiveItemsFromCloud(cloudData.archive);
-        }
         await onManualSync();
         setJustSynced(true);
         setTimeout(() => setJustSynced(false), 2000);
       } catch (syncErr) {
         if (syncErr.code === 'permission-denied' || syncErr.message?.includes('permission')) {
           setErrorMessage('Signed in to Google! Note: Please ensure your firestore.rules are published in Firebase Console to allow cloud reads/writes.');
+        } else {
+          setErrorMessage(syncErr.message || 'Initial cloud sync had an issue.');
         }
       }
     } catch (err) {
@@ -104,10 +100,6 @@ export default function GoogleSyncModal({
     setErrorMessage(null);
     try {
       await signInWithDemoAccount();
-      const cloudData = await pullLatestFromCloud();
-      if (cloudData && Array.isArray(cloudData.archive) && cloudData.archive.length > 0) {
-        importArchiveItemsFromCloud(cloudData.archive);
-      }
       await onManualSync();
       setJustSynced(true);
       setTimeout(() => setJustSynced(false), 2000);
@@ -142,7 +134,11 @@ export default function GoogleSyncModal({
       setJustSynced(true);
       setTimeout(() => setJustSynced(false), 2000);
     } catch (err) {
-      setErrorMessage(err.message || 'Sync failed');
+      if (err.code === 'permission-denied' || err.message?.includes('permission')) {
+        setErrorMessage('Sync permission denied. In Firebase Console, publish firestore.rules allowing authenticated users to read/write /users/{userId}.');
+      } else {
+        setErrorMessage(err.message || 'Sync failed');
+      }
     }
   };
 
@@ -186,9 +182,9 @@ export default function GoogleSyncModal({
         </div>
 
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 text-sm flex-1 overflow-y-auto">
-          {errorMessage && (
+          {(errorMessage || syncState.lastError) && (
             <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-800 dark:text-rose-300">
-              {errorMessage}
+              {errorMessage || syncState.lastError}
             </div>
           )}
 
@@ -239,10 +235,16 @@ export default function GoogleSyncModal({
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
-                    <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                    <span>Live Synced</span>
-                  </div>
+                  {syncState.lastError ? (
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">
+                      <span>Sync Warning</span>
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                      <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <span>Live Synced</span>
+                    </div>
+                  )}
                   <span className="text-[10px] text-slate-400 block mt-0.5">
                     {syncState.lastSyncedAt
                       ? `Synced ${new Date(syncState.lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`

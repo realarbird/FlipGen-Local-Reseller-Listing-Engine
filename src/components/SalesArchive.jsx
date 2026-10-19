@@ -5,7 +5,8 @@ import {
   Trash2, 
   Search, 
   Check, 
-  Plus
+  Plus,
+  RotateCw
 } from 'lucide-react';
 import { 
   getArchiveItems, 
@@ -14,10 +15,19 @@ import {
   exportArchiveToCSV 
 } from '../services/ledgerService';
 
-export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) {
+export default function SalesArchive({ 
+  onNavigateToListing, 
+  onArchiveChanged,
+  syncState,
+  onSyncCloud,
+  onOpenSyncModal
+}) {
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(false);
+  const [syncError, setSyncError] = useState(null);
 
   useEffect(() => {
     const refresh = () => setItems(getArchiveItems());
@@ -25,6 +35,30 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
     window.addEventListener('flipgen_ledger_updated', refresh);
     return () => window.removeEventListener('flipgen_ledger_updated', refresh);
   }, []);
+
+  const handleSyncCloud = async () => {
+    if (!syncState?.isConnected) {
+      if (onOpenSyncModal) {
+        onOpenSyncModal();
+      }
+      return;
+    }
+    setIsSyncing(true);
+    setSyncError(null);
+    try {
+      if (onSyncCloud) {
+        await onSyncCloud();
+      }
+      setItems(getArchiveItems());
+      setSyncSuccess(true);
+      setTimeout(() => setSyncSuccess(false), 2200);
+    } catch (err) {
+      setSyncError(err.message || 'Sync failed');
+      setTimeout(() => setSyncError(null), 5000);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleRemove = (id) => {
     const updated = removeArchiveItem(id);
@@ -72,6 +106,20 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
             <span className="px-1.5 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium ml-1">
               {items.length} Records
             </span>
+            {syncState?.isConnected ? (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 ml-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Cloud Synced
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={onOpenSyncModal}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors ml-1 cursor-pointer"
+              >
+                Local Only • Click to Sync
+              </button>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950 dark:text-white font-sans">
             Sales Archive & Inventory Ledger
@@ -82,6 +130,41 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
         </div>
 
         <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleSyncCloud}
+            disabled={isSyncing}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-xs font-semibold transition-all shadow-sm cursor-pointer ${
+              syncSuccess
+                ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                : syncState?.isConnected
+                ? 'border-orange-200 dark:border-orange-800/80 bg-orange-50/80 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/50'
+                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+            }`}
+            title={
+              syncState?.isConnected
+                ? `Sync archive with Google Cloud (${syncState.user?.email || 'Connected'})`
+                : 'Connect Google account to sync archive across devices'
+            }
+          >
+            {isSyncing ? (
+              <>
+                <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Syncing...</span>
+              </>
+            ) : syncSuccess ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Synced!</span>
+              </>
+            ) : (
+              <>
+                <RotateCw className="w-3.5 h-3.5" />
+                <span>{syncState?.isConnected ? 'Sync Cloud' : 'Connect Cloud'}</span>
+              </>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={exportArchiveToCSV}
@@ -104,6 +187,19 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
           )}
         </div>
       </div>
+
+      {syncError && (
+        <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-800 dark:text-rose-300 flex items-center justify-between gap-3">
+          <span>{syncError}</span>
+          <button
+            type="button"
+            onClick={() => setSyncError(null)}
+            className="text-rose-600 dark:text-rose-400 hover:underline font-semibold cursor-pointer shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
