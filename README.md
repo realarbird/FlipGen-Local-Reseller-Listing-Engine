@@ -53,6 +53,11 @@ Existing AI tools use closed APIs (OpenAI GPT-4o, Claude) that charge per token.
 - **Interactive Results Table:** Filter and search items, inspect full multi-platform copy in a slide-over modal.
 - **Export Enriched CSV:** Download a ready-to-use CSV containing all generated titles, descriptions, and tags.
 
+### 5. 📑 Sales Archive & Inventory Ledger
+- **Archival Desk:** Save generated specimens directly to a persistent local ledger tracking inventory valuation, COGS, projected net profit, and ROI %.
+- **1-Click Platform Copy:** Instant title copy shortcuts for eBay, Poshmark, and Mercari directly from the table.
+- **CSV Export:** Download a complete financial ledger report with specimen IDs, dates, and economics.
+
 ---
 
 ## 🏛️ Strict JSON Prompting Schema (Gemma 2)

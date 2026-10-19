@@ -4,7 +4,6 @@ import {
   Copy, 
   Check, 
   Terminal, 
-  ShieldCheck, 
   Sparkles, 
   AlertCircle, 
   Cpu
@@ -27,34 +26,34 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-150"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="cors-modal-title"
     >
       <div 
-        className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden text-slate-100"
+        className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden text-slate-900"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800 bg-slate-900/50">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/60">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-              <Terminal className="w-5 h-5" />
+            <div className="p-2 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-xs">
+              <Terminal className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <h2 id="cors-modal-title" className="text-lg font-semibold text-white">
+              <h2 id="cors-modal-title" className="text-base font-bold text-slate-900">
                 Ollama Local Connection & CORS Setup
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Connect your browser directly to local Gemma 2 at $0 token cost
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -62,34 +61,35 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
           {/* Quick callout */}
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm flex gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-amber-300">Why is CORS needed?</p>
-              <p className="text-xs text-amber-200/90 mt-1">
-                Browsers enforce Cross-Origin Resource Sharing (CORS) security. By default, Ollama only accepts requests from internal origins. Starting Ollama with <code className="bg-amber-950/60 px-1.5 py-0.5 rounded text-amber-200 font-mono">OLLAMA_ORIGINS="*"</code> allows FlipGen to talk directly to your local models.
+              <p className="font-semibold text-amber-900 text-xs">Why is CORS configuration needed?</p>
+              <p className="text-xs text-amber-800/90 mt-1 leading-relaxed">
+                Browsers enforce Cross-Origin Resource Sharing (CORS) security. By default, Ollama only accepts requests from localhost origins. Starting Ollama with <code className="bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-mono font-semibold">OLLAMA_ORIGINS="*"</code> allows FlipGen to talk directly to your local models with zero latency and complete privacy.
               </p>
             </div>
           </div>
 
           {/* Quick 1-Liner: Mac Fix */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 block mb-2">
               macOS Quick Fix (Set Environment & Restart Ollama)
             </label>
             <div className="relative group">
-              <div className="flex items-center justify-between px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-emerald-400">
+              <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl font-mono text-xs text-emerald-400">
                 <span className="truncate">{macRestartCommand}</span>
                 <button
+                  type="button"
                   onClick={() => copyCommand(macRestartCommand, 'mac-quick')}
-                  className="ml-2 flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition-colors border border-slate-700 shrink-0"
+                  className="ml-2 flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition-colors border border-slate-700 shrink-0 cursor-pointer"
                 >
                   {copiedCmd === 'mac-quick' ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied!</span>
+                      <span className="text-emerald-400 font-semibold">Copied!</span>
                     </>
                   ) : (
                     <>
@@ -100,173 +100,143 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
                 </button>
               </div>
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Sets <code className="text-slate-400 font-mono">OLLAMA_ORIGINS="*"</code> globally in macOS launch services and restarts the app.
-            </p>
           </div>
 
-          {/* Standard Command */}
+          {/* Platform Tabs */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">
-              Terminal Command (All Platforms)
-            </label>
-            <div className="relative group">
-              <div className="flex items-center justify-between px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-sm text-emerald-400">
-                <span>{primaryCommand}</span>
-                <button
-                  onClick={() => copyCommand(primaryCommand, 'primary')}
-                  className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition-colors border border-slate-700 shrink-0"
-                >
-                  {copiedCmd === 'primary' ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Note: If terminal says <em>address already in use</em>, quit the running Ollama menu bar app first.
-            </p>
-          </div>
-
-          {/* OS-specific tabs */}
-          <div>
-            <div className="flex gap-2 border-b border-slate-800 mb-3 text-xs">
+            <div className="flex items-center gap-1 border-b border-slate-200 mb-4">
               <button
+                type="button"
                 onClick={() => setActiveTab('mac')}
-                className={`pb-2 px-1 font-medium transition-colors border-b-2 ${
+                className={`px-3.5 py-2 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
                   activeTab === 'mac'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-300'
+                    ? 'border-orange-600 text-orange-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
                 macOS
               </button>
               <button
-                onClick={() => setActiveTab('render')}
-                className={`pb-2 px-1 font-medium transition-colors border-b-2 ${
-                  activeTab === 'render'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-300'
-                }`}
-              >
-                Render / Chrome Setting
-              </button>
-              <button
+                type="button"
                 onClick={() => setActiveTab('linux')}
-                className={`pb-2 px-1 font-medium transition-colors border-b-2 ${
+                className={`px-3.5 py-2 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
                   activeTab === 'linux'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-300'
+                    ? 'border-orange-600 text-orange-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
                 Linux (systemd)
               </button>
               <button
-                onClick={() => setActiveTab('windows')}
-                className={`pb-2 px-1 font-medium transition-colors border-b-2 ${
-                  activeTab === 'windows'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-300'
+                type="button"
+                onClick={() => setActiveTab('win')}
+                className={`px-3.5 py-2 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                  activeTab === 'win'
+                    ? 'border-orange-600 text-orange-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
-                Windows
+                Windows (PowerShell)
               </button>
             </div>
 
-            <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2 font-mono">
-              {activeTab === 'mac' && (
-                <>
-                  <p className="text-slate-400"># 1. Set environment variable globally for Mac apps:</p>
-                  <p className="text-emerald-400 font-semibold">launchctl setenv OLLAMA_ORIGINS "*"</p>
-                  <p className="text-slate-400"># 2. Quit and restart Ollama:</p>
-                  <p className="text-indigo-400">pkill -f Ollama && open -a Ollama</p>
-                  <p className="text-slate-400"># Or simply run in terminal:</p>
-                  <p className="text-slate-300">OLLAMA_ORIGINS="*" ollama serve</p>
-                </>
-              )}
-
-              {activeTab === 'render' && (
-                <div className="space-y-1.5 font-sans text-slate-300">
-                  <p className="font-semibold text-white">Connecting Render to Localhost directly in Chrome:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-slate-400 text-xs">
-                    <li>Click the <strong>tune / padlock icon</strong> on the left side of the address bar.</li>
-                    <li>Click <strong>Site settings</strong>.</li>
-                    <li>Find <strong>Insecure content</strong> and change it to <strong className="text-emerald-400">Allow</strong>.</li>
-                    <li>Reload the Render page. The browser will now permit direct calls to <code className="font-mono text-indigo-300">http://localhost:11434</code>!</li>
-                  </ol>
+            {/* Tab: Mac */}
+            {activeTab === 'mac' && (
+              <div className="space-y-3 text-xs text-slate-600">
+                <p>1. Quit the Ollama icon from your top menu bar.</p>
+                <p>2. Run this command in Terminal to start Ollama with CORS permissions:</p>
+                <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-xl font-mono text-emerald-400">
+                  <span>{primaryCommand}</span>
+                  <button
+                    type="button"
+                    onClick={() => copyCommand(primaryCommand, 'mac-serve')}
+                    className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-md text-[11px] cursor-pointer"
+                  >
+                    {copiedCmd === 'mac-serve' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedCmd === 'mac-serve' ? 'Copied' : 'Copy'}</span>
+                  </button>
                 </div>
-              )}
+                <p>3. Pull the recommended Gemma 2 model:</p>
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl font-mono text-slate-300">
+                  ollama run gemma2
+                </div>
+              </div>
+            )}
 
-              {activeTab === 'linux' && (
-                <>
-                  <p className="text-slate-400"># Edit systemd service configuration:</p>
-                  <p className="text-emerald-400">sudo systemctl edit ollama.service</p>
-                  <p className="text-slate-400"># Add under [Service]:</p>
-                  <p className="text-slate-200">Environment="OLLAMA_ORIGINS=*"</p>
-                  <p className="text-slate-400"># Reload and restart:</p>
-                  <p className="text-indigo-400">sudo systemctl daemon-reload && sudo systemctl restart ollama</p>
-                </>
-              )}
+            {/* Tab: Linux */}
+            {activeTab === 'linux' && (
+              <div className="space-y-3 text-xs text-slate-600">
+                <p>1. Edit the systemd service configuration for Ollama:</p>
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl font-mono text-slate-300">
+                  sudo systemctl edit ollama.service
+                </div>
+                <p>2. Add the environment variable block:</p>
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl font-mono text-emerald-400">
+                  [Service]<br />
+                  Environment="OLLAMA_ORIGINS=*"
+                </div>
+                <p>3. Reload and restart systemd:</p>
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl font-mono text-slate-300">
+                  sudo systemctl daemon-reload && sudo systemctl restart ollama
+                </div>
+              </div>
+            )}
 
-              {activeTab === 'windows' && (
-                <>
-                  <p className="text-slate-400"># 1. Quit Ollama from system tray</p>
-                  <p className="text-slate-400"># 2. Open Settings &gt; System &gt; About &gt; Advanced system settings</p>
-                  <p className="text-slate-400"># 3. Click 'Environment Variables' and add under User variables:</p>
-                  <p className="text-emerald-400">Variable: OLLAMA_ORIGINS</p>
-                  <p className="text-emerald-400">Value: *</p>
-                  <p className="text-slate-400"># 4. Restart Ollama from Start Menu</p>
-                </>
-              )}
-            </div>
+            {/* Tab: Windows */}
+            {activeTab === 'win' && (
+              <div className="space-y-3 text-xs text-slate-600">
+                <p>1. Exit the Ollama background process from your system tray.</p>
+                <p>2. Open PowerShell and launch Ollama with the origin flag:</p>
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl font-mono text-emerald-400 flex items-center justify-between">
+                  <span>$env:OLLAMA_ORIGINS="*"; ollama serve</span>
+                  <button
+                    type="button"
+                    onClick={() => copyCommand('$env:OLLAMA_ORIGINS="*"; ollama serve', 'win-serve')}
+                    className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-md text-[11px] cursor-pointer"
+                  >
+                    {copiedCmd === 'win-serve' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedCmd === 'win-serve' ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Model pull instruction */}
-          <div className="p-3 bg-slate-800/40 border border-slate-700/60 rounded-xl flex items-center justify-between text-xs">
+          {/* Hackathon Judge Fallback Banner */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
-              <span className="font-semibold text-slate-200">Have Gemma 2 installed?</span>
-              <p className="text-slate-400">If you need to download the model:</p>
+              <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                <Sparkles className="w-4 h-4 text-orange-600" />
+                <span>Evaluating on Render / Without Local Ollama?</span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Enable Judge Demo Mode to evaluate with realistic simulated Gemma 2 output immediately.
+              </p>
             </div>
-            <code className="bg-slate-900 px-2.5 py-1 rounded text-indigo-300 font-mono border border-slate-700">
-              ollama run gemma2
-            </code>
-          </div>
-        </div>
-
-        {/* Footer actions */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 bg-slate-950/60 border-t border-slate-800">
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Direct local Ollama. Zero tokens sent to cloud APIs.</span>
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
+              type="button"
               onClick={() => {
                 onEnableDemoMode();
                 onClose();
               }}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
+              className="px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-sm transition-all shrink-0 cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 fill-current" />
-              <span>Use Judge Demo Mode</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-medium rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
-            >
-              Done
+              Enable Judge Demo Mode
             </button>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end px-6 py-4 bg-slate-50 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs cursor-pointer"
+          >
+            Done
+          </button>
+        </div>
+
       </div>
     </div>
   );

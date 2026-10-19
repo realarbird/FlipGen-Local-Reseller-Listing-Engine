@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import confetti from 'canvas-confetti';
 import { 
@@ -12,32 +12,32 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Clock, 
-  Gauge, 
   DollarSign, 
   Search,
   Eye,
   X,
   Layers,
-  ArrowRight
+  Copy,
+  Check,
+  ChevronRight
 } from 'lucide-react';
-import { SAMPLE_BATCH_ITEMS } from '../services/sampleData';
+import { SAMPLE_BATCH_ITEMS, SAMPLE_CSV_CONTENT } from '../services/sampleData';
 import { generateListing } from '../services/ollamaService';
-import PlatformCard from './PlatformCard';
 
 export default function BatchGenerator({ ollamaStatus, config }) {
   const [items, setItems] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedItem, setSelectedItem] = useState(null); // For detail drawer/modal
+  const [selectedItem, setSelectedItem] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(null);
 
-  // Cumulative batch metrics
   const [batchStats, setBatchStats] = useState({
     totalTokens: 0,
     startTime: null,
     totalDurationMs: 0,
-    moneySaved: 0.0, // calculated at $0.03 per listing vs GPT-4o
+    moneySaved: 0.0,
     completedCount: 0
   });
 
@@ -53,7 +53,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
     const formatted = SAMPLE_BATCH_ITEMS.map((item, idx) => ({
       ...item,
       id: `sample-${idx + 1}`,
-      status: 'pending', // 'pending' | 'processing' | 'completed' | 'failed'
+      status: 'pending',
       generatedData: null,
       error: null
     }));
@@ -85,6 +85,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
           id: `csv-${Date.now()}-${idx}`,
           item_name: row.item_name || row.title || row.Item || row.Name || `Item #${idx + 1}`,
           condition: row.condition || row.Condition || 'Good / Gently Used',
+          niche: row.niche || row.category || 'General Merchandise',
           raw_notes: row.raw_notes || row.notes || row.Notes || row.description || '',
           price: row.price || row.Price || '35.00',
           cost: row.cost || row.Cost || '5.00',
@@ -123,13 +124,10 @@ export default function BatchGenerator({ ollamaStatus, config }) {
 
     for (let i = 0; i < items.length; i++) {
       if (stopSignalRef.current) break;
-
-      // Skip already completed items
       if (items[i].status === 'completed') continue;
 
       setCurrentIndex(i);
 
-      // Mark current item as processing
       setItems((prev) =>
         prev.map((item, idx) =>
           idx === i ? { ...item, status: 'processing' } : item
@@ -148,8 +146,9 @@ export default function BatchGenerator({ ollamaStatus, config }) {
 
         if (res.success) {
           completed++;
-          const tokensAdded = res.metrics?.tokens || 340;
-          currentTokens += tokensAdded;
+          const tokensFromItem = res.metrics?.tokens || 340;
+          currentTokens += tokensFromItem;
+          const currentDuration = Math.round(performance.now() - batchStartTime);
 
           setItems((prev) =>
             prev.map((item, idx) =>
@@ -158,24 +157,31 @@ export default function BatchGenerator({ ollamaStatus, config }) {
                     ...item,
                     status: 'completed',
                     generatedData: res.data,
-                    metrics: res.metrics
+                    metrics: res.metrics,
+                    error: null
                   }
                 : item
             )
           );
 
-          setBatchStats((prev) => ({
-            ...prev,
+          setBatchStats({
             totalTokens: currentTokens,
-            completedCount: completed,
-            totalDurationMs: Math.round(performance.now() - batchStartTime),
-            moneySaved: parseFloat((completed * 0.03).toFixed(2))
-          }));
+            startTime: batchStartTime,
+            totalDurationMs: currentDuration,
+            moneySaved: parseFloat((completed * 0.03).toFixed(2)),
+            completedCount: completed
+          });
         }
       } catch (err) {
         setItems((prev) =>
           prev.map((item, idx) =>
-            idx === i ? { ...item, status: 'failed', error: err.message } : item
+            idx === i
+              ? {
+                  ...item,
+                  status: 'failed',
+                  error: err.message || 'Generation error'
+                }
+              : item
           )
         );
       }
@@ -184,24 +190,23 @@ export default function BatchGenerator({ ollamaStatus, config }) {
     setIsProcessing(false);
     setCurrentIndex(-1);
 
-    // If all completed, trigger confetti
-    confetti({
-      particleCount: 80,
-      spread: 80,
-      origin: { y: 0.7 },
-      colors: ['#6366f1', '#10b981', '#f59e0b']
-    });
+    if (completed > 0) {
+      confetti({
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.8 },
+        colors: ['#ea580c', '#16a34a', '#2563eb']
+      });
+    }
   };
 
-  const pauseProcessing = () => {
+  const stopProcessing = () => {
     stopSignalRef.current = true;
     setIsProcessing(false);
   };
 
-  const resetBatch = () => {
-    stopSignalRef.current = true;
-    setIsProcessing(false);
-    setCurrentIndex(-1);
+  const handleReset = () => {
+    stopProcessing();
     setItems((prev) =>
       prev.map((item) => ({
         ...item,
@@ -210,6 +215,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
         error: null
       }))
     );
+    setCurrentIndex(-1);
     setBatchStats({
       totalTokens: 0,
       startTime: null,
@@ -219,430 +225,465 @@ export default function BatchGenerator({ ollamaStatus, config }) {
     });
   };
 
-  // Export completed listings to CSV
+  // Export Enriched CSV
   const handleExportCSV = () => {
     if (items.length === 0) return;
 
-    const exportRows = items.map((item) => {
-      const g = item.generatedData;
-      return {
-        'Original Item Name': item.item_name,
-        'Condition': item.condition,
-        'Target Price': item.price,
-        'COGS': item.cost || '',
-        'Raw Notes': item.raw_notes,
-        'Status': item.status,
-        'eBay Title (80-Char Max)': g?.ebay?.title || '',
-        'eBay Description': g?.ebay?.description || '',
-        'eBay Keywords': g?.ebay?.keywords ? g.ebay.keywords.join(', ') : '',
-        'Poshmark Title': g?.poshmark?.title || '',
-        'Poshmark Description': g?.poshmark?.description || '',
-        'Poshmark Tags': g?.poshmark?.tags ? g.poshmark.tags.join(', ') : '',
-        'Mercari Title': g?.mercari?.title || '',
-        'Mercari Description': g?.mercari?.description || '',
-        'Mercari Hashtags': g?.mercari?.hashtags ? g.mercari.hashtags.join(', ') : '',
-        'Pricing & Strategy Tip': g?.pricing_tip || ''
-      };
-    });
+    const exportRows = items.map((item) => ({
+      item_name: item.item_name,
+      condition: item.condition,
+      price: item.price,
+      cost: item.cost,
+      raw_notes: item.raw_notes,
+      status: item.status,
+      ebay_title: item.generatedData?.ebay?.title || '',
+      ebay_description: item.generatedData?.ebay?.description || '',
+      poshmark_title: item.generatedData?.poshmark?.title || '',
+      poshmark_description: item.generatedData?.poshmark?.description || '',
+      poshmark_tags: item.generatedData?.poshmark?.tags?.join(' ') || '',
+      mercari_title: item.generatedData?.mercari?.title || '',
+      mercari_description: item.generatedData?.mercari?.description || '',
+      mercari_hashtags: item.generatedData?.mercari?.hashtags?.join(' ') || ''
+    }));
 
-    const csvString = Papa.unparse(exportRows);
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const csv = Papa.unparse(exportRows);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `flipgen_batch_listings_${Date.now()}.csv`);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `FlipGen_Enriched_Batch_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
-  // Filter items
-  const filteredItems = items.filter(
-    (item) =>
-      item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.condition.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleDownloadSampleTemplate = () => {
+    const blob = new Blob([SAMPLE_CSV_CONTENT], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'FlipGen_Batch_Template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCopy = (text, key) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 1800);
+  };
+
+  const filteredItems = items.filter((item) =>
+    (item.item_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.condition || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const completedCount = items.filter((i) => i.status === 'completed').length;
-  const progressPercent = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;
+  const completedTotal = items.filter((i) => i.status === 'completed').length;
+  const progressPercent = items.length > 0 ? Math.round((completedTotal / items.length) * 100) : 0;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-200">
       
-      {/* Hero Header */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-500/10 via-amber-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-3xl space-y-3 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>High-Volume Reseller Engine: 50+ Listings at $0 Cost</span>
+      {/* Page Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-1.5">
+            <span>Catalog Desk</span>
+            <span>/</span>
+            <span className="text-slate-900 font-semibold">Batch Processing</span>
+            <span className="px-1.5 py-0.5 rounded text-[11px] bg-slate-100 text-slate-700 font-medium ml-1">
+              {items.length} in queue
+            </span>
           </div>
-
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            Batch CSV Listing Generator
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950 font-sans">
+            Batch CSV Processing Desk
           </h1>
-          <p className="text-sm text-slate-300 leading-relaxed">
-            Upload your inventory spreadsheet or test with our sample vintage batch. Gemma 2 runs sequentially through every row, outputting tailored titles, descriptions, and keywords for eBay, Poshmark, and Mercari.
+          <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+            Bulk-synthesize multi-platform listings from spreadsheets with on-device Gemma 2 at $0 token cost.
           </p>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <button
-              onClick={handleLoadSampleBatch}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 fill-white" />
-              <span>Load Sample Vintage Batch (5 Items)</span>
-            </button>
-
-            <a
-              href="/sample_vintage_batch.csv"
-              download
-              className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 font-medium text-xs transition-colors flex items-center gap-2"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download Blank / Sample CSV</span>
-            </a>
-          </div>
+        {/* Quick Actions */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleLoadSampleBatch}
+            className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm cursor-pointer"
+          >
+            📻 Load 5 Sample Flips
+          </button>
+          <button
+            type="button"
+            onClick={handleDownloadSampleTemplate}
+            className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm cursor-pointer"
+          >
+            Template CSV
+          </button>
         </div>
       </div>
 
-      {/* CSV Dropzone & Metrics Strip */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Upload Dropzone */}
-        <div className="lg:col-span-7">
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragOver(false);
-              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                handleFileUpload(e.dataTransfer.files[0]);
-              }
-            }}
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
-              dragOver
-                ? 'border-indigo-400 bg-indigo-500/10'
-                : 'border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40'
-            }`}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleFileUpload(e.target.files[0]);
-                }
-              }}
-            />
-
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mb-3">
-              <Upload className="w-6 h-6" />
-            </div>
-            <h3 className="text-sm font-semibold text-slate-100 mb-1">
-              Drop your inventory CSV here or click to browse
-            </h3>
-            <p className="text-xs text-slate-400 max-w-sm mb-3">
-              Supported columns: <code className="text-indigo-300 font-mono">item_name</code>, <code className="text-indigo-300 font-mono">condition</code>, <code className="text-indigo-300 font-mono">raw_notes</code>, <code className="text-indigo-300 font-mono">price</code>.
-            </p>
-            <span className="text-[11px] text-slate-500">Supports 50+ items in a single run with zero token rate limits</span>
+      {/* Upload Dropzone (if empty or collapsed) */}
+      {items.length === 0 && (
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
+          }}
+          className={`bg-white rounded-xl border-2 border-dashed p-10 flex flex-col items-center justify-center text-center transition-all ${
+            dragOver ? 'border-orange-500 bg-orange-50/20' : 'border-slate-300 hover:border-slate-400'
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={(e) => handleFileUpload(e.target.files?.[0])}
+            className="hidden"
+          />
+          <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 mb-3">
+            <Upload className="w-6 h-6 text-slate-600" />
+          </div>
+          <h3 className="text-sm font-bold text-slate-900 mb-1">
+            Drop inventory CSV file here or browse
+          </h3>
+          <p className="text-xs text-slate-500 max-w-md mb-4">
+            Supports CSV headers: <code className="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">item_name</code>, <code className="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">condition</code>, <code className="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">raw_notes</code>, <code className="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">price</code>
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
+            >
+              Select CSV File
+            </button>
+            <button
+              type="button"
+              onClick={handleLoadSampleBatch}
+              className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-sm transition-all cursor-pointer"
+            >
+              Use 5 Sample Vintage Items
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Live Metrics & Money Saved Counter */}
-        <div className="lg:col-span-5 flex flex-col justify-between glass-panel rounded-3xl p-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Reseller Cost Advantage
+      {/* Batch Stats & Controls (when items loaded) */}
+      {items.length > 0 && (
+        <div className="space-y-4">
+          
+          {/* Summary Economics Bar */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                Queue Progress
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                100% Free / Local
-              </span>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-slate-900">
+                  {completedTotal} / {items.length}
+                </span>
+                <span className="text-xs text-slate-500 font-medium">{progressPercent}%</span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
-                <span className="text-[11px] text-slate-400 block mb-1">Money Saved</span>
-                <span className="text-xl font-extrabold text-emerald-400 font-mono">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                Inference Cost
+              </span>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-emerald-700 font-mono">
+                  $0.00
+                </span>
+                <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                  100% On-Device
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                API Cost Saved
+              </span>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
                   ${batchStats.moneySaved.toFixed(2)}
                 </span>
-                <span className="text-[10px] text-slate-500 block mt-0.5">vs $0.03/listing cloud APIs</span>
-              </div>
-
-              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
-                <span className="text-[11px] text-slate-400 block mb-1">Tokens Generated</span>
-                <span className="text-xl font-extrabold text-indigo-400 font-mono">
-                  {batchStats.totalTokens.toLocaleString()}
-                </span>
-                <span className="text-[10px] text-slate-500 block mt-0.5">$0.00 spent</span>
+                <span className="text-xs text-slate-500 font-medium">vs GPT-4o</span>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Batch Progress</span>
-                <span className="font-semibold text-slate-200">
-                  {completedCount} / {items.length} items ({progressPercent}%)
+            <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                Tokens Generated
+              </span>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
+                  {batchStats.totalTokens}
                 </span>
-              </div>
-              <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-2.5 rounded-full transition-all duration-300"
-                  style={{ width: `${progressPercent}%` }}
-                />
+                <span className="text-xs text-slate-500 font-medium">Gemma 2</span>
               </div>
             </div>
           </div>
 
-          {/* Quick controls */}
-          <div className="flex items-center gap-2 pt-4">
-            {!isProcessing ? (
+          {/* Action Toolbar */}
+          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              {!isProcessing ? (
+                <button
+                  type="button"
+                  onClick={startProcessing}
+                  disabled={completedTotal === items.length}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span>Start Batch Pipeline</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={stopProcessing}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                >
+                  <Pause className="w-3.5 h-3.5 fill-white" />
+                  <span>Pause Processing</span>
+                </button>
+              )}
+
               <button
-                disabled={items.length === 0 || completedCount === items.length}
-                onClick={startProcessing}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-amber-500 hover:from-indigo-500 hover:to-amber-400 text-white font-semibold text-xs shadow-lg shadow-indigo-600/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+                type="button"
+                onClick={handleReset}
+                disabled={isProcessing}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
               >
-                <Play className="w-3.5 h-3.5 fill-white" />
-                <span>{completedCount > 0 && completedCount < items.length ? 'Resume Batch' : 'Start Batch Processing'}</span>
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
               </button>
-            ) : (
-              <button
-                onClick={pauseProcessing}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs shadow-lg shadow-amber-500/20 cursor-pointer transition-all"
-              >
-                <Pause className="w-3.5 h-3.5 fill-current" />
-                <span>Pause Processing</span>
-              </button>
-            )}
-
-            <button
-              disabled={items.length === 0 || isProcessing}
-              onClick={resetBatch}
-              className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 disabled:opacity-40 transition-colors"
-              title="Reset all rows to pending"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Batch Data Table */}
-      {items.length > 0 && (
-        <div className="glass-panel rounded-3xl p-6 space-y-4">
-          
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-400" />
-              <h2 className="text-base font-semibold text-white">
-                Queue & Listings Table ({items.length} Items)
-              </h2>
-            </div>
-
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-64">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-500" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Filter by name or condition..."
-                  className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
 
               <button
+                type="button"
                 onClick={handleExportCSV}
-                disabled={completedCount === 0}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs transition-colors shadow-lg shadow-emerald-600/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+                disabled={completedTotal === 0}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Export Enriched CSV</span>
               </button>
             </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Filter items..."
+                className="w-full sm:w-64 pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600"
+              />
+            </div>
           </div>
 
           {/* Table Container */}
-          <div className="overflow-x-auto rounded-xl border border-slate-800/80">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-900/80 text-[10px] uppercase tracking-wider font-semibold text-slate-400 border-b border-slate-800">
-                <tr>
-                  <th className="py-3 px-4">#</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Item Name</th>
-                  <th className="py-3 px-4">Condition</th>
-                  <th className="py-3 px-4">Price</th>
-                  <th className="py-3 px-4">eBay SEO Title (80-Char)</th>
-                  <th className="py-3 px-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/50 bg-slate-950/40">
-                {filteredItems.map((item, idx) => {
-                  const isCurrent = isProcessing && currentIndex === idx;
-                  const g = item.generatedData;
-                  const ebayTitle = g?.ebay?.title;
-                  const ebayLen = ebayTitle ? ebayTitle.length : 0;
-
-                  return (
-                    <tr
-                      key={item.id}
-                      className={`hover:bg-slate-900/40 transition-colors ${
-                        isCurrent ? 'bg-indigo-500/10' : ''
+          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200/80 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                    <th className="py-3 px-4">#</th>
+                    <th className="py-3 px-4">Item & Identifier</th>
+                    <th className="py-3 px-4">Condition</th>
+                    <th className="py-3 px-4 text-right">Price</th>
+                    <th className="py-3 px-4 text-right">Cost</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-right">Inspect</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredItems.map((item, idx) => (
+                    <tr 
+                      key={item.id} 
+                      className={`hover:bg-slate-50/70 transition-colors ${
+                        item.status === 'processing' ? 'bg-orange-50/30' : ''
                       }`}
                     >
-                      <td className="py-3 px-4 text-slate-500 font-mono">
+                      <td className="py-3.5 px-4 font-mono text-slate-400">
                         {idx + 1}
                       </td>
 
-                      <td className="py-3 px-4">
-                        {item.status === 'completed' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-medium">
-                            <CheckCircle2 className="w-3 h-3" /> Done
-                          </span>
-                        )}
-                        {item.status === 'processing' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-medium animate-pulse">
-                            <Sparkles className="w-3 h-3 animate-spin" /> Processing
-                          </span>
-                        )}
-                        {item.status === 'pending' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px]">
-                            Pending
-                          </span>
-                        )}
-                        {item.status === 'failed' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px]">
-                            Failed
-                          </span>
-                        )}
+                      <td className="py-3.5 px-4 max-w-xs">
+                        <span className="font-semibold text-slate-900 block truncate" title={item.item_name}>
+                          {item.item_name}
+                        </span>
+                        <span className="text-[11px] text-slate-500 truncate block">
+                          {item.raw_notes || 'No raw notes provided'}
+                        </span>
                       </td>
 
-                      <td className="py-3 px-4 font-medium text-slate-100 max-w-xs truncate">
-                        {item.item_name}
-                      </td>
-
-                      <td className="py-3 px-4 text-slate-400">
+                      <td className="py-3.5 px-4 text-slate-600">
                         {item.condition}
                       </td>
 
-                      <td className="py-3 px-4 font-mono text-slate-200">
+                      <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-900">
                         ${parseFloat(item.price || 0).toFixed(2)}
                       </td>
 
-                      <td className="py-3 px-4 max-w-xs truncate">
-                        {ebayTitle ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-200 truncate">{ebayTitle}</span>
-                            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded border shrink-0 ${
-                              ebayLen <= 80 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                            }`}>
-                              {ebayLen}/80
-                            </span>
-                          </div>
+                      <td className="py-3.5 px-4 text-right font-mono text-slate-600">
+                        ${parseFloat(item.cost || 0).toFixed(2)}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-center">
+                        {item.status === 'completed' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700">
+                            <Check className="w-3 h-3" /> Ready
+                          </span>
+                        ) : item.status === 'processing' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-orange-700 animate-pulse">
+                            Processing
+                          </span>
+                        ) : item.status === 'failed' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700">
+                            Failed
+                          </span>
                         ) : (
-                          <span className="text-slate-600 italic">Not generated yet</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">
+                            Pending
+                          </span>
                         )}
                       </td>
 
-                      <td className="py-3 px-4 text-right">
-                        {item.status === 'completed' ? (
-                          <button
-                            onClick={() => setSelectedItem(item)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition-colors"
-                          >
-                            <Eye className="w-3 h-3 text-indigo-400" />
-                            <span>View</span>
-                          </button>
-                        ) : (
-                          <span className="text-slate-600 text-[11px]">—</span>
-                        )}
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          type="button"
+                          disabled={!item.generatedData}
+                          onClick={() => setSelectedItem(item)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold text-slate-700 hover:text-orange-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
+                        </button>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
         </div>
       )}
 
-      {/* Item Detail Modal / Inspection Drawer */}
+      {/* Inspect Item Drawer / Modal */}
       {selectedItem && selectedItem.generatedData && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200"
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-150"
           onClick={() => setSelectedItem(null)}
-          role="dialog"
-          aria-modal="true"
         >
-          <div
-            className="relative w-full max-w-4xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden text-slate-100 max-h-[90vh] flex flex-col"
+          <div 
+            className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl p-6 max-h-[85vh] overflow-y-auto space-y-5"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/60">
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-400">
-                  Listing Preview & Copy
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  Batch Item Specimen
                 </span>
-                <h3 className="text-base font-bold text-white truncate max-w-lg">
+                <h3 className="text-base font-bold text-slate-900 mt-0.5">
                   {selectedItem.item_name}
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedItem(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Body: 3 Platform Cards */}
-            <div className="p-6 overflow-y-auto space-y-6 flex-1">
-              {selectedItem.generatedData.pricing_tip && (
-                <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-200">
-                  <strong className="text-indigo-300">Reseller Comps & Pricing Strategy: </strong>
-                  {selectedItem.generatedData.pricing_tip}
-                </div>
-              )}
+            {/* eBay */}
+            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                  eBay Title ({selectedItem.generatedData.ebay?.title?.length || 0}/80)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(selectedItem.generatedData.ebay?.title, 'drawer-ebay')}
+                  className="text-xs font-semibold text-slate-600 hover:text-blue-600 transition-colors"
+                >
+                  {copiedKey === 'drawer-ebay' ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+              <p className="text-sm font-semibold text-slate-900">
+                {selectedItem.generatedData.ebay?.title}
+              </p>
+              <p className="text-xs text-slate-600 font-mono whitespace-pre-wrap pt-2">
+                {selectedItem.generatedData.ebay?.description}
+              </p>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <PlatformCard
-                  platform="ebay"
-                  data={selectedItem.generatedData.ebay}
-                  price={selectedItem.price}
-                />
-                <PlatformCard
-                  platform="poshmark"
-                  data={selectedItem.generatedData.poshmark}
-                  price={selectedItem.price}
-                />
-                <PlatformCard
-                  platform="mercari"
-                  data={selectedItem.generatedData.mercari}
-                  price={selectedItem.price}
-                />
+            {/* Poshmark */}
+            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-rose-700 uppercase tracking-wider">
+                  Poshmark Headline & Tags
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(selectedItem.generatedData.poshmark?.title, 'drawer-posh')}
+                  className="text-xs font-semibold text-slate-600 hover:text-rose-600 transition-colors"
+                >
+                  {copiedKey === 'drawer-posh' ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+              <p className="text-sm font-semibold text-slate-900">
+                {selectedItem.generatedData.poshmark?.title}
+              </p>
+              <p className="text-xs text-slate-600 whitespace-pre-wrap pt-1">
+                {selectedItem.generatedData.poshmark?.description}
+              </p>
+              <div className="flex gap-1.5 flex-wrap pt-1">
+                {selectedItem.generatedData.poshmark?.tags?.map((t, idx) => (
+                  <span key={idx} className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium">
+                    {t.startsWith('#') ? t : `#${t}`}
+                  </span>
+                ))}
               </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="px-6 py-3 bg-slate-950/60 border-t border-slate-800 flex justify-end">
+            {/* Mercari */}
+            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">
+                  Mercari Headline & Bullets
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(selectedItem.generatedData.mercari?.title, 'drawer-merc')}
+                  className="text-xs font-semibold text-slate-600 hover:text-amber-600 transition-colors"
+                >
+                  {copiedKey === 'drawer-merc' ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+              <p className="text-sm font-semibold text-slate-900">
+                {selectedItem.generatedData.mercari?.title}
+              </p>
+              <div className="text-xs text-slate-600 whitespace-pre-wrap pt-1">
+                {selectedItem.generatedData.mercari?.description}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
               <button
+                type="button"
                 onClick={() => setSelectedItem(null)}
-                className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-medium transition-colors"
+                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm"
               >
-                Close Preview
+                Done
               </button>
             </div>
           </div>

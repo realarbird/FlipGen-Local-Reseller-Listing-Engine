@@ -154,6 +154,23 @@ You MUST output ONLY a valid JSON object matching this schema:
       parsedResponse.ebay.title = parsedResponse.ebay.title.substring(0, 80).trim();
     }
 
+    // Ensure ebay specifics and mercari bullets exist for rich UI rendering
+    if (parsedResponse.ebay && !parsedResponse.ebay.specifics) {
+      parsedResponse.ebay.specifics = {
+        condition: itemData.condition || 'Pre-owned (Good)',
+        model: itemData.item_name ? itemData.item_name.split(' ').slice(1, 3).join(' ') : 'Specimen',
+        color: 'Original',
+        included: 'As Pictured'
+      };
+    }
+    if (parsedResponse.mercari && !parsedResponse.mercari.bullets) {
+      parsedResponse.mercari.bullets = [
+        { type: 'truck', bold: 'Fast Shipping: ', text: 'Securely packaged and dispatched within 24 hours.' },
+        { type: 'check', bold: '', text: `${itemData.condition || 'Pre-owned'}. Tested and inspected.` },
+        { type: 'check', bold: '', text: itemData.raw_notes ? itemData.raw_notes.slice(0, 90) : 'Ships securely with tracking.' }
+      ];
+    }
+
     // Calculate performance metrics
     const evalCount = data.eval_count || 340;
     const evalDurationSec = data.eval_duration ? data.eval_duration / 1e9 : durationMs / 1000;
@@ -184,8 +201,8 @@ You MUST output ONLY a valid JSON object matching this schema:
  * Produces authentic e-commerce copy tailored to the item with realistic generation delay.
  */
 export async function generateSimulatedListing(itemData) {
-  // Simulate AI generation latency (500ms - 900ms)
-  const delay = Math.floor(Math.random() * 400) + 500;
+  // Simulate AI generation latency (400ms - 800ms)
+  const delay = Math.floor(Math.random() * 400) + 400;
   await new Promise((resolve) => setTimeout(resolve, delay));
 
   const name = itemData.item_name || 'Vintage Item';
@@ -204,24 +221,11 @@ export async function generateSimulatedListing(itemData) {
   if (ebayTitle.length > 80) {
     ebayTitle = name.slice(0, 80);
   }
-  // Trim words to fit 80 chars cleanly
   if (ebayTitle.length > 80) {
     ebayTitle = ebayTitle.slice(0, 77) + '...';
   }
 
-  const ebayDesc = `✅ **ITEM OVERVIEW:**
-• Product: ${name}
-• Condition: ${cond}
-• Authenticity: 100% Genuine OEM
-
-🔍 **CONDITION & DETAILED NOTES:**
-• ${notes}
-• All components inspected and cleaned prior to listing.
-• Stored in a smoke-free, climate-controlled environment.
-
-📦 **SHIPPING & HANDLING:**
-• Packaged with protective bubble wrap and sturdy box.
-• Ships within 24 hours of payment with tracking provided.`;
+  const ebayDesc = `Fully tested vintage unit. Plays tapes clearly with smooth rewind & FF functions. Battery compartment pristine with zero corrosion. Clean terminals. Light superficial casing wear consistent with age. Original belt clip included. Ships safely packed.`;
 
   const ebayKeywords = [
     brand.toLowerCase(),
@@ -232,32 +236,26 @@ export async function generateSimulatedListing(itemData) {
   ];
 
   // 2. Poshmark: Aesthetic, warm, styling-focused
-  const poshTitle = `✨ ${brand} ${keyModel} | ${cond.split('/')[0].trim()}`;
-  const poshDesc = `The ultimate find! Elevate your collection with this authentic ${name}. ✨
-
-💫 **Details:**
-• Condition: ${cond}
-• Notes from closet: ${notes}
-• Ready to style or use immediately
-
-💌 Open to reasonable offers via the Offer button! Bundle with 2+ items from my closet for an automatic discount and combined shipping. Smoke-free home. Fast shipper!`;
+  const poshTitle = `${brand} ${keyModel || 'Vintage Edition'} • Retro Aesthetic`;
+  const poshDesc = `📻 The Vibe: Authentic Y2K vintage aesthetic. The iconic ${name} with full original character!\n✨ Condition: Tested & works like a charm. Carefully preserved in smoke-free home.`;
 
   const poshTags = [
-    'VintageStyle',
-    brand.replace(/\s+/g, ''),
-    'Streetwear',
-    'ThriftFinds',
-    'RetroVibes'
+    '#VintageTech',
+    '#Y2Kaesthetic',
+    '#RetroAudio',
+    `#${brand.replace(/\s+/g, '')}`,
+    '#ThriftFinds'
   ];
 
   // 3. Mercari: Concise, transparent, quick buyer confidence
-  const mercariTitle = `${name.slice(0, 48)} - Works Great!`;
-  const mercariDesc = `Up for sale is this ${name}.
+  const mercariTitle = `${name.slice(0, 50)} (Fully Tested + Accessories)`;
+  const mercariDesc = `Up for sale is this ${name}. Tested and functional with fast shipping.`;
 
-Condition: ${cond}
-Details: ${notes}
-
-Ships fast & secure via USPS with tracking! Cleaned and ready for a new home. Feel free to send an offer or message with questions!`;
+  const mercariBullets = [
+    { type: 'truck', bold: 'Fast Shipping: ', text: 'Securely packaged and dispatched within 24 hours.' },
+    { type: 'check', bold: '', text: `${cond} condition. Tested and inspected prior to shipment.` },
+    { type: 'check', bold: '', text: notes.length > 80 ? notes.slice(0, 80) + '...' : notes }
+  ];
 
   const mercariHashtags = [
     `#${brand.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
@@ -282,6 +280,12 @@ Ships fast & secure via USPS with tracking! Cleaned and ready for a new home. Fe
       ebay: {
         title: ebayTitle,
         description: ebayDesc,
+        specifics: {
+          condition: cond,
+          model: keyModel || 'Vintage OEM',
+          color: 'Silver / Multi',
+          included: notes.toLowerCase().includes('clip') ? 'Belt Clip' : 'As Pictured'
+        },
         keywords: ebayKeywords
       },
       poshmark: {
@@ -292,6 +296,7 @@ Ships fast & secure via USPS with tracking! Cleaned and ready for a new home. Fe
       mercari: {
         title: mercariTitle,
         description: mercariDesc,
+        bullets: mercariBullets,
         hashtags: mercariHashtags
       },
       pricing_tip: pricingTip
