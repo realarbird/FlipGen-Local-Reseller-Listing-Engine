@@ -58,15 +58,17 @@ Existing AI tools use closed APIs (OpenAI GPT-4o, Claude) that charge per token.
 - **1-Click Platform Copy:** Instant title copy shortcuts for eBay, Poshmark, and Mercari directly from the table.
 - **CSV Export:** Download a complete financial ledger report with specimen IDs, dates, and economics.
 
-### 6. ☁️ Google Drive Cloud Sync & Cross-Device Workflow
+### 6. ☁️ 1-Click Google Sign-In & Real-Time Cloud Sync
 - **Cross-Platform Reseller Freedom:** Run local Gemma 2 models at $0 token cost on your laptop at home, then access your listings, inventory archive, and comps from your smartphone while sourcing at thrift stores.
+- **True 1-Click Google Authentication:** Zero-friction Google Sign-In powered by Firebase Auth. No manual Google Cloud Project setup, OAuth consent screen creation, or client ID pasting required for end-users.
+- **Real-Time Cross-Device Sync:** Powered by Cloud Firestore `onSnapshot`. When you save an item or adjust settings on your laptop, your phone updates live in real time.
 - **Auto-Sync on Launch:** Automatically checks for cloud updates on startup whenever logged in.
-- **Cloud Preferences Sync:** Automatically syncs your custom Ollama host URL, selected model, dark/light mode preference, and sales archive ledger into `flipgen_reseller_data.json` on Google Drive.
-- **1-Click Demo & Real Google OAuth:** Connect immediately with a zero-friction 1-Click Demo Account, or authorize with your own Google Cloud OAuth 2.0 Client ID.
+- **Cloud Preferences Sync:** Automatically syncs your custom Ollama host URL, selected model, dark/light mode preference, and sales archive ledger into Firestore.
+- **Offline / Sandbox Ready:** Includes a zero-friction 1-Click Demo Account with isolated cloud sandbox for immediate hackathon judge testing without signing into Google.
 
 ### 7. 🌓 Dark Mode & Light "Artisan Ledger" Theme
 - **Instant Theme Switching:** 1-click toggle between the warm editorial "Artisan Ledger" paper aesthetic and high-contrast dark mode.
-- **Persistent & Synced:** Theme preference is remembered locally and synced to your Google Drive account.
+- **Persistent & Synced:** Theme preference is remembered locally and synced to your Google account.
 
 ---
 

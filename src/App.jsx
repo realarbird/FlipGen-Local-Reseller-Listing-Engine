@@ -5,18 +5,20 @@ import BatchGenerator from './components/BatchGenerator';
 import SalesArchive from './components/SalesArchive';
 import CorsHelpModal from './components/CorsHelpModal';
 import SettingsModal from './components/SettingsModal';
-import GoogleDriveModal from './components/GoogleDriveModal';
+import GoogleSyncModal from './components/GoogleSyncModal';
 import { 
   checkOllamaConnection, 
   DEFAULT_OLLAMA_URL, 
   DEFAULT_MODEL 
 } from './services/ollamaService';
 import { 
-  getDriveSyncState, 
-  subscribeToDriveSync, 
-  syncFromGoogleDrive, 
-  syncToGoogleDrive 
-} from './services/googleDriveService';
+  getSyncState, 
+  subscribeToSync, 
+  pullLatestFromCloud, 
+  pushToCloud,
+  listenToLiveCloudUpdates,
+  initAuthObserver
+} from './services/firebaseService';
 import { getArchiveItems, importArchiveItemsFromCloud } from './services/ledgerService';
 import { Sparkles, Terminal } from 'lucide-react';
 
@@ -24,15 +26,15 @@ export default function App() {
   const [activeView, setActiveView] = useState('single');
   const [isCorsModalOpen, setIsCorsModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [isDriveModalOpen, setIsDriveModalOpen] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   // Theme State (Dark / Light)
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('flipgen_theme') || 'light';
   });
 
-  // Google Drive State
-  const [driveState, setDriveState] = useState(getDriveSyncState());
+  // Google Cloud Sync State (Firebase 1-Click Auth)
+  const [syncState, setSyncState] = useState(getSyncState());
 
   const [ollamaStatus, setOllamaStatus] = useState({
     connected: false,
@@ -58,13 +60,46 @@ export default function App() {
     localStorage.setItem('flipgen_theme', theme);
   }, [theme]);
 
-  // Subscribe to Google Drive sync updates
+  // Subscribe to Google Firebase sync updates & auth state changes
   useEffect(() => {
-    const unsub = subscribeToDriveSync((state) => {
-      setDriveState(state);
+    const unsub = subscribeToSync((state) => {
+      setSyncState(state);
     });
-    return unsub;
+    const unsubAuth = initAuthObserver((userData) => {
+      setSyncState((prev) => ({ ...prev, user: userData, isConnected: true }));
+    });
+    return () => {
+      unsub();
+      unsubAuth();
+    };
   }, []);
+
+  // Real-time cross-device listener (phone ↔ laptop live updates)
+  useEffect(() => {
+    if (syncState?.isConnected && !syncState?.isDemo) {
+      const unsubLive = listenToLiveCloudUpdates((cloudData) => {
+        if (cloudData) {
+          if (cloudData.theme && (cloudData.theme === 'dark' || cloudData.theme === 'light')) {
+            setTheme(cloudData.theme);
+          }
+          if (cloudData.baseUrl) {
+            setConfig((prev) => ({
+              ...prev,
+              baseUrl: cloudData.baseUrl,
+              model: cloudData.model || prev.model,
+              temperature: cloudData.temperature ?? prev.temperature
+            }));
+          }
+          if (Array.isArray(cloudData.archive) && cloudData.archive.length > 0) {
+            importArchiveItemsFromCloud(cloudData.archive);
+          }
+        }
+      });
+      return () => {
+        if (typeof unsubLive === 'function') unsubLive();
+      };
+    }
+  }, [syncState?.user?.uid, syncState?.isConnected, syncState?.isDemo]);
 
   // Check Ollama status on startup
   const verifyConnection = async (customUrl) => {
@@ -89,18 +124,18 @@ export default function App() {
     }
   };
 
-  // Google Drive Auto-Sync on startup:
+  // Google Cloud Auto-Sync on startup:
   // "Everytime someone opens this page, if the website is already logged into it should check for updates on information."
   useEffect(() => {
     verifyConnection();
 
     const autoSyncFromCloudOnOpen = async () => {
-      const currentState = getDriveSyncState();
+      const currentState = getSyncState();
       if (currentState.isConnected) {
         try {
-          const cloudData = await syncFromGoogleDrive();
+          const cloudData = await pullLatestFromCloud();
           if (cloudData) {
-            // 1. Sync theme preference from Google Drive
+            // 1. Sync theme preference from Google Cloud
             if (cloudData.theme && (cloudData.theme === 'dark' || cloudData.theme === 'light')) {
               setTheme(cloudData.theme);
             }
@@ -128,9 +163,9 @@ export default function App() {
     autoSyncFromCloudOnOpen();
   }, []);
 
-  // Sync current bundle to Google Drive
+  // Sync current bundle to Google Cloud (Firestore)
   const handlePushToCloud = useCallback(async (overrides = {}) => {
-    const currentState = getDriveSyncState();
+    const currentState = getSyncState();
     if (!currentState.isConnected) return;
 
     const payload = {
@@ -143,7 +178,7 @@ export default function App() {
       ...overrides
     };
 
-    await syncToGoogleDrive(payload);
+    await pushToCloud(payload);
   }, [theme, config]);
 
   // Toggle Theme handler
@@ -186,8 +221,8 @@ export default function App() {
         setActiveView={setActiveView}
         theme={theme}
         onToggleTheme={handleToggleTheme}
-        driveState={driveState}
-        onOpenDriveModal={() => setIsDriveModalOpen(true)}
+        syncState={syncState}
+        onOpenSyncModal={() => setIsSyncModalOpen(true)}
       />
 
       {/* Discrete Judge Demo Mode Banner */}
@@ -250,11 +285,11 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Google Drive Cloud Sync Modal */}
-      <GoogleDriveModal
-        isOpen={isDriveModalOpen}
-        onClose={() => setIsDriveModalOpen(false)}
-        driveState={driveState}
+      {/* Google Cloud Sync Modal (1-Click Google Auth + Firestore Sync) */}
+      <GoogleSyncModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+        syncState={syncState}
         onManualSync={handlePushToCloud}
         currentPreferences={{
           theme: theme === 'dark' ? 'Dark' : 'Light',

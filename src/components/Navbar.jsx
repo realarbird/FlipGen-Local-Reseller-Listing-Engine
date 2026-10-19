@@ -21,20 +21,22 @@ export default function Navbar({
   setActiveView,
   theme,
   onToggleTheme,
+  syncState,
   driveState,
+  onOpenSyncModal,
   onOpenDriveModal
 }) {
   const isOnline = ollamaStatus.connected;
+  const activeSyncState = syncState || driveState;
+  const handleOpenSync = onOpenSyncModal || onOpenDriveModal;
 
-  // Authentic Google Drive icon
-  const GoogleDriveIcon = () => (
-    <svg className="w-4 h-4 shrink-0" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
-      <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
-      <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44c-.8 1.4-1.2 2.95-1.2 4.5h27.5z" fill="#00ac47"/>
-      <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/>
-      <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
-      <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/>
-      <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/>
+  // Authentic Google "G" icon
+  const GoogleLogo = () => (
+    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
     </svg>
   );
 
@@ -179,30 +181,30 @@ export default function Navbar({
 
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5"></div>
 
-          {/* Google Drive Connect Button in place of profile picture (JD) */}
-          {driveState?.isConnected ? (
+          {/* Google 1-Click Cloud Sync Button in place of profile picture (JD) */}
+          {activeSyncState?.isConnected ? (
             <button
               type="button"
-              onClick={onOpenDriveModal}
+              onClick={handleOpenSync}
               className="inline-flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer shadow-xs group"
-              title="Connected to Google Drive. Click to manage cloud sync."
+              title="Connected with Google. Click to manage real-time cloud sync."
             >
-              {driveState.user?.picture ? (
+              {activeSyncState.user?.picture ? (
                 <img
-                  src={driveState.user.picture}
-                  alt={driveState.user.name}
+                  src={activeSyncState.user.picture}
+                  alt={activeSyncState.user.name}
                   className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-300 dark:border-slate-700"
                 />
               ) : (
                 <div className="w-6 h-6 rounded-full bg-orange-600 text-white flex items-center justify-center text-[10px] font-bold">
-                  {driveState.user?.given_name?.[0] || driveState.user?.name?.[0] || 'G'}
+                  {activeSyncState.user?.given_name?.[0] || activeSyncState.user?.name?.[0] || 'G'}
                 </div>
               )}
               <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
                 <span className="hidden sm:inline max-w-[90px] truncate">
-                  {driveState.user?.given_name || driveState.user?.name?.split(' ')[0] || 'Drive'}
+                  {activeSyncState.user?.given_name || activeSyncState.user?.name?.split(' ')[0] || 'Google'}
                 </span>
-                {driveState.isSyncing ? (
+                {activeSyncState.isSyncing ? (
                   <RotateCw className="w-3 h-3 text-orange-600 animate-spin" />
                 ) : (
                   <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
@@ -212,12 +214,12 @@ export default function Navbar({
           ) : (
             <button
               type="button"
-              onClick={onOpenDriveModal}
+              onClick={handleOpenSync}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold shadow-xs hover:border-orange-500/40 transition-all cursor-pointer group"
-              title="Connect Google Drive to sync listings, ledger archives, and preferences across devices"
+              title="1-Click Google Sign-In to sync listings, ledger archives, and preferences across devices"
             >
-              <GoogleDriveIcon />
-              <span className="hidden sm:inline">Connect Drive</span>
+              <GoogleLogo />
+              <span className="hidden sm:inline">Google Sync</span>
               <span className="sm:hidden">Sync</span>
             </button>
           )}
