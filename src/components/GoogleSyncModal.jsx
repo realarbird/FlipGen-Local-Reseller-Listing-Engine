@@ -23,6 +23,7 @@ import {
   getFirebaseConfig,
   saveCustomFirebaseConfig
 } from '../services/firebaseService';
+import { importArchiveItemsFromCloud } from '../services/ledgerService';
 
 export default function GoogleSyncModal({
   isOpen,
@@ -70,13 +71,17 @@ export default function GoogleSyncModal({
 
       await signInWithGoogle();
       try {
+        const cloudData = await pullLatestFromCloud();
+        if (cloudData && Array.isArray(cloudData.archive) && cloudData.archive.length > 0) {
+          importArchiveItemsFromCloud(cloudData.archive);
+        }
         await onManualSync();
         setJustSynced(true);
         setTimeout(() => setJustSynced(false), 2000);
       } catch (syncErr) {
         console.warn('Initial cloud sync note:', syncErr);
         if (syncErr.code === 'permission-denied' || syncErr.message?.includes('permission')) {
-          setErrorMessage('Signed in to Google! Note: Please publish your firestore.rules in Firebase Console to enable Firestore cloud storage.');
+          setErrorMessage('Signed in to Google! Note: Please ensure your firestore.rules are published in Firebase Console to allow cloud reads/writes.');
         }
       }
     } catch (err) {
@@ -104,6 +109,10 @@ export default function GoogleSyncModal({
     setErrorMessage(null);
     try {
       await signInWithDemoAccount();
+      const cloudData = await pullLatestFromCloud();
+      if (cloudData && Array.isArray(cloudData.archive) && cloudData.archive.length > 0) {
+        importArchiveItemsFromCloud(cloudData.archive);
+      }
       await onManualSync();
       setJustSynced(true);
       setTimeout(() => setJustSynced(false), 2000);
@@ -155,20 +164,20 @@ export default function GoogleSyncModal({
       aria-labelledby="google-sync-title"
     >
       <div
-        className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100 transition-colors"
+        className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
               <GoogleLogo />
             </div>
             <div>
-              <h2 id="google-sync-title" className="text-base font-bold text-slate-900 dark:text-white">
+              <h2 id="google-sync-title" className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                 Google Cloud Sync
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                 1-Click authentication & real-time cross-device sync
               </p>
             </div>
@@ -183,7 +192,7 @@ export default function GoogleSyncModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-5 text-sm">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 text-sm flex-1 overflow-y-auto">
           {/* Error Notice */}
           {errorMessage && (
             <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-800 dark:text-rose-300">

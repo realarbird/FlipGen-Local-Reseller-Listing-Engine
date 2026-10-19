@@ -65,8 +65,29 @@ export default function App() {
     const unsub = subscribeToSync((state) => {
       setSyncState(state);
     });
-    const unsubAuth = initAuthObserver((userData) => {
+    const unsubAuth = initAuthObserver(async (userData) => {
       setSyncState((prev) => ({ ...prev, user: userData, isConnected: true }));
+      try {
+        const cloudData = await pullLatestFromCloud();
+        if (cloudData) {
+          if (cloudData.theme && (cloudData.theme === 'dark' || cloudData.theme === 'light')) {
+            setTheme(cloudData.theme);
+          }
+          if (cloudData.baseUrl) {
+            setConfig((prev) => ({
+              ...prev,
+              baseUrl: cloudData.baseUrl,
+              model: cloudData.model || prev.model,
+              temperature: cloudData.temperature ?? prev.temperature
+            }));
+          }
+          if (Array.isArray(cloudData.archive) && cloudData.archive.length > 0) {
+            importArchiveItemsFromCloud(cloudData.archive);
+          }
+        }
+      } catch (e) {
+        console.warn('Auto-pull on auth resolve note:', e);
+      }
     });
     return () => {
       unsub();

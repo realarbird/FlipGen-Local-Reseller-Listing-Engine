@@ -58,6 +58,9 @@ export function saveItemToArchive(item) {
 
     const updated = [newItem, ...current];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('flipgen_ledger_updated', { detail: updated }));
+    }
     return newItem;
   } catch (e) {
     console.error('Failed to save to archive:', e);
@@ -70,6 +73,9 @@ export function removeArchiveItem(id) {
     const current = getArchiveItems();
     const updated = current.filter((item) => item.id !== id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('flipgen_ledger_updated', { detail: updated }));
+    }
     return updated;
   } catch (e) {
     console.error('Failed to delete item from archive:', e);
@@ -80,6 +86,9 @@ export function removeArchiveItem(id) {
 export function clearArchive() {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('flipgen_ledger_updated', { detail: [] }));
+    }
     return [];
   } catch (e) {
     return [];
@@ -136,6 +145,9 @@ export function importArchiveItemsFromCloud(cloudItems) {
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('flipgen_ledger_updated', { detail: merged }));
+    }
     return merged;
   } catch (e) {
     console.error('Failed to merge cloud archive items:', e);

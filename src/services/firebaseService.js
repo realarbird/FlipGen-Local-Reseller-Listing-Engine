@@ -269,10 +269,18 @@ export async function pullLatestFromCloud() {
     } else {
       const { db } = getFirebaseInstances();
       if (db && state.user.uid) {
+        // Primary location
         const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           cloudData = docSnap.data();
+        } else {
+          // Fallback location
+          const rootRef = doc(db, 'users', state.user.uid);
+          const rootSnap = await getDoc(rootRef);
+          if (rootSnap.exists() && rootSnap.data().archive) {
+            cloudData = rootSnap.data();
+          }
         }
       }
     }
@@ -285,6 +293,14 @@ export async function pullLatestFromCloud() {
       isSyncing: false,
       lastSyncedAt: now
     });
+
+    if (cloudData) {
+      console.log('FlipGen Cloud Sync: Successfully pulled cloud data for', state.user.email, {
+        archiveCount: Array.isArray(cloudData.archive) ? cloudData.archive.length : 0,
+        theme: cloudData.theme,
+        baseUrl: cloudData.baseUrl
+      });
+    }
 
     return cloudData;
   } catch (err) {
@@ -307,7 +323,8 @@ export async function pushToCloud(payload) {
       appName: 'FlipGen Reseller Engine',
       version: '1.0.0',
       syncedAt: new Date().toISOString(),
-      userEmail: state.user.email
+      userEmail: state.user.email,
+      uid: state.user.uid
     };
 
     if (state.isDemo) {
@@ -318,6 +335,16 @@ export async function pushToCloud(payload) {
       if (db && state.user.uid) {
         const docRef = doc(db, 'users', state.user.uid, 'flipgen', 'data');
         await setDoc(docRef, fullPayload, { merge: true });
+
+        // Also update root user document
+        const rootRef = doc(db, 'users', state.user.uid);
+        await setDoc(rootRef, {
+          email: state.user.email,
+          displayName: state.user.name,
+          updatedAt: fullPayload.syncedAt,
+          theme: fullPayload.theme || 'light',
+          archiveCount: Array.isArray(fullPayload.archive) ? fullPayload.archive.length : 0
+        }, { merge: true });
       }
     }
 
@@ -328,6 +355,11 @@ export async function pushToCloud(payload) {
       ...getSyncState(),
       isSyncing: false,
       lastSyncedAt: now
+    });
+
+    console.log('FlipGen Cloud Sync: Pushed bundle to cloud successfully at', now, {
+      itemsSynced: Array.isArray(fullPayload.archive) ? fullPayload.archive.length : 0,
+      theme: fullPayload.theme
     });
 
     return true;

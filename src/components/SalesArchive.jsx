@@ -17,10 +17,11 @@ import {
 export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) {
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [copiedId, setCopiedId] = useState(null);
-
   useEffect(() => {
-    setItems(getArchiveItems());
+    const refresh = () => setItems(getArchiveItems());
+    refresh();
+    window.addEventListener('flipgen_ledger_updated', refresh);
+    return () => window.removeEventListener('flipgen_ledger_updated', refresh);
   }, []);
 
   const handleRemove = (id) => {
@@ -200,128 +201,252 @@ export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) 
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  <th className="py-3 px-4">Specimen & Title</th>
-                  <th className="py-3 px-4">Niche Category</th>
-                  <th className="py-3 px-4">Condition</th>
-                  <th className="py-3 px-4 text-right">COGS</th>
-                  <th className="py-3 px-4 text-right">Target Price</th>
-                  <th className="py-3 px-4 text-right">Est. Profit (ROI)</th>
-                  <th className="py-3 px-4 text-center">Platform Copies</th>
-                  <th className="py-3 px-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3.5 px-4 max-w-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                          {item.specimen}
-                        </span>
-                        <span className="font-semibold text-slate-900 dark:text-white truncate" title={item.title}>
-                          {item.title}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
-                        Saved {new Date(item.savedAt).toLocaleDateString()}
+          <>
+            {/* Mobile Touch-Friendly Card View (screens < md) */}
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {filtered.map((item) => (
+                <div key={item.id} className="p-4 flex flex-col gap-3 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                  {/* Top Badges & Delete */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                        {item.specimen}
                       </span>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-700 dark:text-slate-300">
                         {item.niche}
                       </span>
-                    </td>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        • {item.condition}
+                      </span>
+                    </div>
 
-                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
-                      {item.condition}
-                    </td>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(item.id)}
+                      className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                      title="Remove from ledger"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
 
-                    <td className="py-3.5 px-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
-                      ${parseFloat(item.cogs).toFixed(2)}
-                    </td>
+                  {/* Title & Date */}
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white text-sm leading-snug">
+                      {item.title}
+                    </h3>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+                      Saved {new Date(item.savedAt).toLocaleDateString()}
+                    </span>
+                  </div>
 
-                    <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-900 dark:text-white">
-                      ${parseFloat(item.price).toFixed(2)}
-                    </td>
-
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <span className="font-bold font-mono text-emerald-700 dark:text-emerald-400">
+                  {/* Economics Grid */}
+                  <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                    <div>
+                      <span className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 block">COGS</span>
+                      <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        ${parseFloat(item.cogs).toFixed(2)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 block">Target</span>
+                      <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                        ${parseFloat(item.price).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 block">Est. Profit</span>
+                      <div className="flex items-center justify-end gap-1">
+                        <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
                           +${parseFloat(item.profit).toFixed(2)}
                         </span>
-                        <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                        <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.2 rounded">
                           +{parseFloat(item.roi).toFixed(0)}%
                         </span>
                       </div>
-                    </td>
+                    </div>
+                  </div>
 
-                    <td className="py-3.5 px-4 text-center">
-                      <div className="inline-flex items-center gap-1.5">
-                        {item.ebayTitle && (
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(item.ebayTitle, `${item.id}-ebay`)}
-                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
-                            title="Copy eBay Title"
-                          >
-                            {copiedId === `${item.id}-ebay` ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            ) : (
-                              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">eB</span>
-                            )}
-                          </button>
-                        )}
-                        {item.poshTitle && (
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(item.poshTitle, `${item.id}-posh`)}
-                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
-                            title="Copy Poshmark Title"
-                          >
-                            {copiedId === `${item.id}-posh` ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            ) : (
-                              <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400">PM</span>
-                            )}
-                          </button>
-                        )}
-                        {item.mercariTitle && (
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(item.mercariTitle, `${item.id}-merc`)}
-                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
-                            title="Copy Mercari Title"
-                          >
-                            {copiedId === `${item.id}-merc` ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            ) : (
-                              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">MC</span>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-3 text-right">
+                  {/* Multi-Platform 1-Tap Copy Pills */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mr-1">Copy:</span>
+                    {item.ebayTitle && (
                       <button
                         type="button"
-                        onClick={() => handleRemove(item.id)}
-                        className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                        title="Remove from ledger"
+                        onClick={() => handleCopy(item.ebayTitle, `${item.id}-ebay-m`)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/80 text-[11px] font-semibold transition-all cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        {copiedId === `${item.id}-ebay-m` ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <span>eBay Title</span>
+                        )}
                       </button>
-                    </td>
+                    )}
+                    {item.poshTitle && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(item.poshTitle, `${item.id}-posh-m`)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-900/80 text-[11px] font-semibold transition-all cursor-pointer"
+                      >
+                        {copiedId === `${item.id}-posh-m` ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <span>Poshmark Title</span>
+                        )}
+                      </button>
+                    )}
+                    {item.mercariTitle && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(item.mercariTitle, `${item.id}-merc-m`)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/80 text-[11px] font-semibold transition-all cursor-pointer"
+                      >
+                        {copiedId === `${item.id}-merc-m` ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <span>Mercari Title</span>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Wide Table View (screens >= md) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <th className="py-3 px-4">Specimen & Title</th>
+                    <th className="py-3 px-4">Niche Category</th>
+                    <th className="py-3 px-4">Condition</th>
+                    <th className="py-3 px-4 text-right">COGS</th>
+                    <th className="py-3 px-4 text-right">Target Price</th>
+                    <th className="py-3 px-4 text-right">Est. Profit (ROI)</th>
+                    <th className="py-3 px-4 text-center">Platform Copies</th>
+                    <th className="py-3 px-3 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filtered.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3.5 px-4 max-w-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                            {item.specimen}
+                          </span>
+                          <span className="font-semibold text-slate-900 dark:text-white truncate" title={item.title}>
+                            {item.title}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+                          Saved {new Date(item.savedAt).toLocaleDateString()}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                          {item.niche}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
+                        {item.condition}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
+                        ${parseFloat(item.cogs).toFixed(2)}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-900 dark:text-white">
+                        ${parseFloat(item.price).toFixed(2)}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="font-bold font-mono text-emerald-700 dark:text-emerald-400">
+                            +${parseFloat(item.profit).toFixed(2)}
+                          </span>
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                            +{parseFloat(item.roi).toFixed(0)}%
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="inline-flex items-center gap-1.5">
+                          {item.ebayTitle && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(item.ebayTitle, `${item.id}-ebay`)}
+                              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                              title="Copy eBay Title"
+                            >
+                              {copiedId === `${item.id}-ebay` ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              ) : (
+                                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">eB</span>
+                              )}
+                            </button>
+                          )}
+                          {item.poshTitle && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(item.poshTitle, `${item.id}-posh`)}
+                              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                              title="Copy Poshmark Title"
+                            >
+                              {copiedId === `${item.id}-posh` ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              ) : (
+                                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400">PM</span>
+                              )}
+                            </button>
+                          )}
+                          {item.mercariTitle && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(item.mercariTitle, `${item.id}-merc`)}
+                              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
+                              title="Copy Mercari Title"
+                            >
+                              {copiedId === `${item.id}-merc` ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              ) : (
+                                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">MC</span>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(item.id)}
+                          className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                          title="Remove from ledger"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
       </div>
