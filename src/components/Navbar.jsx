@@ -112,11 +112,17 @@ export default function Navbar({
               <button
                 onClick={onOpenCorsModal}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-medium hover:bg-rose-500/20 transition-all"
-                title="Local Ollama not detected. Click for terminal setup guide or toggle demo mode."
+                title={ollamaStatus.isMixedContent 
+                  ? "Browser blocked http://localhost because Render is on HTTPS. Click for 1-command tunnel guide or use Demo Mode."
+                  : "Local Ollama not detected. Click for terminal setup guide or toggle demo mode."}
               >
                 <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-                <span className="hidden md:inline">Ollama Offline (CORS)</span>
-                <span className="md:hidden">Offline</span>
+                <span className="hidden md:inline">
+                  {ollamaStatus.isMixedContent ? "Render HTTPS (Click Guide)" : "Ollama Offline (CORS)"}
+                </span>
+                <span className="md:hidden">
+                  {ollamaStatus.isMixedContent ? "HTTPS" : "Offline"}
+                </span>
               </button>
             )}
 

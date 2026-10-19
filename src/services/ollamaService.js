@@ -10,6 +10,10 @@ export const DEFAULT_MODEL = 'gemma2';
  * @returns {Promise<{connected: boolean, models: Array, error?: string}>}
  */
 export async function checkOllamaConnection(baseUrl = DEFAULT_OLLAMA_URL) {
+  const isHttpsPage = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const isTargetInsecure = baseUrl.startsWith('http://');
+  const isMixedContent = isHttpsPage && isTargetInsecure;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 2500);
 
@@ -22,13 +26,19 @@ export async function checkOllamaConnection(baseUrl = DEFAULT_OLLAMA_URL) {
     clearTimeout(timeoutId);
 
     if (!res.ok) {
-      return { connected: false, models: [], error: `HTTP ${res.status}: ${res.statusText}` };
+      return { 
+        connected: false, 
+        models: [], 
+        isMixedContent,
+        error: `HTTP ${res.status}: ${res.statusText}` 
+      };
     }
 
     const data = await res.json();
     return {
       connected: true,
       models: data.models || [],
+      isMixedContent: false,
       error: null
     };
   } catch (err) {
@@ -36,7 +46,10 @@ export async function checkOllamaConnection(baseUrl = DEFAULT_OLLAMA_URL) {
     return {
       connected: false,
       models: [],
-      error: err.name === 'AbortError' ? 'Connection timed out' : err.message
+      isMixedContent,
+      error: isMixedContent 
+        ? 'Mixed Content Block: Browser blocked http://localhost from HTTPS (Render). Use an HTTPS tunnel or Demo Mode.' 
+        : (err.name === 'AbortError' ? 'Connection timed out' : err.message)
     };
   }
 }

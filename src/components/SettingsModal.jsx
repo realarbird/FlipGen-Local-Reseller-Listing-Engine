@@ -92,7 +92,7 @@ export default function SettingsModal({
               className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             />
             <p className="text-[11px] text-slate-500 mt-1">
-              Standard local Ollama API port is 11434.
+              Standard local URL is <code className="text-slate-400 font-mono">http://localhost:11434</code>. On Render (HTTPS), paste your free HTTPS tunnel URL (e.g. <code className="text-indigo-400 font-mono">https://...trycloudflare.com</code>).
             </p>
           </div>
 
