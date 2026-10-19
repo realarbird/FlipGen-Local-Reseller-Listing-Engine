@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Sparkles, 
   RotateCw, 
@@ -7,19 +7,15 @@ import {
   Archive, 
   Plus, 
   Truck, 
-  Trash2, 
-  ExternalLink,
-  ChevronDown,
-  TrendingUp,
-  Tag,
-  Zap
+  ChevronDown, 
+  Zap 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { PRESET_ITEMS } from '../services/sampleData';
 import { generateListing } from '../services/ollamaService';
 import { saveItemToArchive } from '../services/ledgerService';
 
-export default function SingleItemGenerator({ ollamaStatus, config, onNavigateToArchive }) {
+export default function SingleItemGenerator({ ollamaStatus, config, onNavigateToArchive, onItemSaved }) {
   const initialPreset = PRESET_ITEMS[0]; // Electronics (Sony Walkman)
 
   const [activePresetKey, setActivePresetKey] = useState(initialPreset.key);
@@ -229,6 +225,10 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
 
     setSavedToLedger(true);
     setTimeout(() => setSavedToLedger(false), 2500);
+
+    if (onItemSaved) {
+      onItemSaved();
+    }
   };
 
   return (
@@ -237,25 +237,25 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
       {/* Clean Page Header & Presets */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2">
         <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-1.5">
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
             <span>Catalog Desk</span>
             <span>/</span>
-            <span className="text-slate-900 font-semibold">{specimenId}</span>
-            <span className="px-1.5 py-0.5 rounded text-[11px] bg-emerald-50 text-emerald-700 font-medium ml-1">
+            <span className="text-slate-900 dark:text-white font-semibold">{specimenId}</span>
+            <span className="px-1.5 py-0.5 rounded text-[11px] bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-medium ml-1">
               Auto-saved
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950 font-sans">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950 dark:text-white font-sans">
             Single Item Lister
           </h1>
-          <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
             Convert raw thrift condition observations into tailored, multi-platform listings for eBay (80-character cap), Poshmark, and Mercari with zero cloud token cost.
           </p>
         </div>
 
         {/* Quick Preset Selector */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 mr-1 flex items-center gap-1">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mr-1 flex items-center gap-1">
             <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
             Presets:
           </span>
@@ -268,8 +268,8 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 onClick={() => handleSelectPreset(preset)}
                 className={`preset-btn px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-white text-slate-900 border border-slate-300 shadow-sm hover:border-slate-400 font-semibold'
-                    : 'bg-slate-100 text-slate-600 border border-transparent hover:bg-white hover:border-slate-200'
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 shadow-sm hover:border-slate-400 dark:hover:border-slate-600 font-semibold'
+                    : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-transparent hover:bg-white dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
                 }`}
               >
                 {preset.label}
@@ -284,28 +284,28 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
         
         {/* LEFT COLUMN: Input Flow (5 cols) */}
         <section className="lg:col-span-5 flex flex-col gap-6">
-          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 flex flex-col gap-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h2 className="text-sm font-bold tracking-tight text-slate-900 uppercase">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 flex flex-col gap-5 transition-colors">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white uppercase">
                 Item Metadata
               </h2>
-              <span className="text-xs text-slate-600">Step 1 of 2</span>
+              <span className="text-xs text-slate-600 dark:text-slate-400">Step 1 of 2</span>
             </div>
 
             {/* Working Title with Minimalist Counter */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
-                <label className="font-semibold text-slate-800" htmlFor="workingTitle">
+                <label className="font-semibold text-slate-800 dark:text-slate-200" htmlFor="workingTitle">
                   Working Title & Identifiers
                 </label>
-                <span className="text-slate-600">
+                <span className="text-slate-600 dark:text-slate-400">
                   <span 
                     className={`font-semibold ${
                       formData.title.length > 80 
                         ? 'text-rose-600 font-bold' 
                         : formData.title.length >= 70 
                         ? 'text-amber-600' 
-                        : 'text-slate-900'
+                        : 'text-slate-900 dark:text-white'
                     }`}
                   >
                     {formData.title.length}
@@ -319,21 +319,21 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="e.g. 1994 Carhartt J97 MOS Blanket Lined Detroit Jacket"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all font-sans"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all font-sans"
               />
             </div>
 
             {/* Compact Photo Strip */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-800">Item Inspection Photos</span>
-                <span className="text-slate-600">{photos.length} uploaded</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">Item Inspection Photos</span>
+                <span className="text-slate-600 dark:text-slate-400">{photos.length} uploaded</span>
               </div>
               <div className="grid grid-cols-3 gap-2.5">
                 {photos.map((photo, idx) => (
                   <div 
                     key={idx}
-                    className="relative aspect-[4/3] rounded-lg overflow-hidden border border-slate-200 bg-slate-50 group"
+                    className="relative aspect-[4/3] rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 group"
                   >
                     <img
                       src={photo.src}
@@ -347,14 +347,14 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 ))}
 
                 {/* Add Photo Tile */}
-                <label className="border border-dashed border-slate-300 rounded-lg aspect-[4/3] flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-50/70 transition-all text-slate-500">
+                <label className="border border-dashed border-slate-300 dark:border-slate-700 rounded-lg aspect-[4/3] flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-all text-slate-500 dark:text-slate-400">
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoUpload}
                     className="hidden"
                   />
-                  <Plus className="w-5 h-5 text-slate-400" />
+                  <Plus className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                   <span className="text-[11px] font-medium mt-0.5">Add photo</span>
                 </label>
               </div>
@@ -363,7 +363,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
             {/* Category & Condition Dropdowns */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-slate-800" htmlFor="conditionSelect">
+                <label className="text-xs font-semibold text-slate-800 dark:text-slate-200" htmlFor="conditionSelect">
                   Condition Grade
                 </label>
                 <div className="relative">
@@ -371,7 +371,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                     id="conditionSelect"
                     value={formData.condition}
                     onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                    className="w-full px-3 py-2 pr-8 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all cursor-pointer appearance-none"
+                    className="w-full px-3 py-2 pr-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all cursor-pointer appearance-none"
                   >
                     <option value="bnwt">New with Tags (BNWT)</option>
                     <option value="likenew">Like New / Mint</option>
@@ -384,7 +384,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-slate-800" htmlFor="nicheInput">
+                <label className="text-xs font-semibold text-slate-800 dark:text-slate-200" htmlFor="nicheInput">
                   Niche Category
                 </label>
                 <input
@@ -393,23 +393,23 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                   value={formData.niche}
                   onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
                   placeholder="e.g. Consumer Electronics"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all font-sans"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all font-sans"
                 />
               </div>
             </div>
 
             {/* Unit Financials & Profit Bar */}
-            <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200/80 flex flex-col gap-2.5">
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-950/70 rounded-lg border border-slate-200/80 dark:border-slate-800 flex flex-col gap-2.5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label 
-                    className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1"
+                    className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
                     htmlFor="cogsInput"
                   >
                     Cost of Goods
                   </label>
                   <div className="relative">
-                    <span className="absolute left-2.5 top-1.5 text-xs text-slate-600 font-medium">$</span>
+                    <span className="absolute left-2.5 top-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">$</span>
                     <input
                       id="cogsInput"
                       type="number"
@@ -417,20 +417,20 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                       min="0"
                       value={formData.cogs}
                       onChange={(e) => setFormData({ ...formData, cogs: e.target.value })}
-                      className="w-full pl-6 pr-2 py-1.5 rounded-md border border-slate-200 bg-white text-xs font-semibold text-slate-900 focus:outline-none focus:border-orange-600"
+                      className="w-full pl-6 pr-2 py-1.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-orange-600"
                     />
                   </div>
                 </div>
 
                 <div>
                   <label 
-                    className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 mb-1"
+                    className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
                     htmlFor="priceInput"
                   >
                     Target Price
                   </label>
                   <div className="relative">
-                    <span className="absolute left-2.5 top-1.5 text-xs text-slate-600 font-medium">$</span>
+                    <span className="absolute left-2.5 top-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">$</span>
                     <input
                       id="priceInput"
                       type="number"
@@ -438,20 +438,20 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                       min="0"
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      className="w-full pl-6 pr-2 py-1.5 rounded-md border border-slate-200 bg-white text-xs font-semibold text-slate-900 focus:outline-none focus:border-orange-600"
+                      className="w-full pl-6 pr-2 py-1.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-orange-600"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Profit & ROI Divider */}
-              <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
-                <span className="text-slate-600">Est. Net Profit (eBay ~13.25% fee)</span>
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span className="text-slate-600 dark:text-slate-400">Est. Net Profit (eBay ~13.25% fee)</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900 text-sm">
+                  <span className="font-bold text-slate-900 dark:text-white text-sm">
                     +${netProfit.toFixed(2)}
                   </span>
-                  <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                  <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
                     +{roi}% ROI
                   </span>
                 </div>
@@ -461,13 +461,13 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
             {/* Condition Observations / Raw Notes */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs">
-                <label className="font-semibold text-slate-800" htmlFor="rawNotes">
+                <label className="font-semibold text-slate-800 dark:text-slate-200" htmlFor="rawNotes">
                   Raw Condition Notes
                 </label>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, notes: '' })}
-                  className="text-xs text-slate-600 hover:text-slate-800 transition-colors cursor-pointer"
+                  className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                 >
                   Clear
                 </button>
@@ -478,7 +478,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Flaws, functionality, inclusions, serials, and tactile notes..."
-                className="w-full p-3 rounded-lg border border-slate-200 bg-white text-xs leading-relaxed font-mono text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all custom-scrollbar resize-none"
+                className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs leading-relaxed font-mono text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all custom-scrollbar resize-none"
               />
             </div>
 
@@ -509,17 +509,17 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
         <section className="lg:col-span-7 flex flex-col gap-5" id="generationResults">
           
           {/* Header Bar for Output Desk */}
-          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold tracking-tight text-slate-900">
+                <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
                   Generated Channels
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                   3 Ready
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-0.5">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                 Synthesized via Gemma 2 in {genMetrics.timeStr} • {genMetrics.mode}
               </p>
             </div>
@@ -528,12 +528,12 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               <button
                 type="button"
                 onClick={handleCopyAll}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm cursor-pointer"
               >
                 {copiedKey === 'copy-all' ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700">Copied!</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-emerald-700 dark:text-emerald-300">Copied!</span>
                   </>
                 ) : (
                   <>
@@ -546,11 +546,11 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               <button
                 type="button"
                 onClick={handleSaveToLedger}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold transition-colors shadow-sm cursor-pointer"
               >
                 {savedToLedger ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" />
                     <span>Saved!</span>
                   </>
                 ) : (
@@ -564,19 +564,19 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
           </div>
 
           {/* Channel 1: eBay Marketplace (High Precision SEO) */}
-          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden transition-all hover:border-slate-300">
-            <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
+            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                <span className="font-bold text-xs uppercase tracking-wider text-slate-900">
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white">
                   eBay Marketplace
                 </span>
-                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-semibold tracking-wide">
+                <span className="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[10px] font-semibold tracking-wide">
                   80-Char Cap
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs font-medium text-slate-600">
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                   <span className={channelData.ebay?.title?.length > 80 ? 'text-rose-600 font-bold' : ''}>
                     {channelData.ebay?.title?.length || 0}
                   </span>
@@ -585,12 +585,12 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 <button
                   type="button"
                   onClick={() => handleCopy(channelData.ebay?.title, 'ebay-title')}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-orange-600 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-orange-600 transition-colors cursor-pointer"
                 >
                   {copiedKey === 'ebay-title' ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="text-emerald-700">Copied</span>
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-700 dark:text-emerald-300">Copied</span>
                     </>
                   ) : (
                     <>
@@ -605,37 +605,37 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
             <div className="p-5 flex flex-col gap-4">
               {/* Title */}
               <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 block mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-1">
                   Optimized Title
                 </span>
-                <p className="text-sm font-semibold text-slate-900 leading-snug font-sans">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug font-sans">
                   {channelData.ebay?.title}
                 </p>
               </div>
 
               {/* Specifics Table */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-2 px-3 rounded-lg bg-slate-50 border border-slate-100">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-2 px-3 rounded-lg bg-slate-50 dark:bg-slate-950/70 border border-slate-100 dark:border-slate-800">
                 <div>
-                  <span className="text-slate-600 text-[11px] block">Condition</span>
-                  <span className="font-medium text-slate-900">
+                  <span className="text-slate-600 dark:text-slate-400 text-[11px] block">Condition</span>
+                  <span className="font-medium text-slate-900 dark:text-white">
                     {channelData.specifics?.condition || 'Pre-owned (Good)'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-600 text-[11px] block">Model</span>
-                  <span className="font-medium text-slate-900">
+                  <span className="text-slate-600 dark:text-slate-400 text-[11px] block">Model</span>
+                  <span className="font-medium text-slate-900 dark:text-white">
                     {channelData.specifics?.model || 'WM-FX195'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-600 text-[11px] block">Color</span>
-                  <span className="font-medium text-slate-900">
+                  <span className="text-slate-600 dark:text-slate-400 text-[11px] block">Color</span>
+                  <span className="font-medium text-slate-900 dark:text-white">
                     {channelData.specifics?.color || 'Silver'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-600 text-[11px] block">Included</span>
-                  <span className="font-medium text-slate-900">
+                  <span className="text-slate-600 dark:text-slate-400 text-[11px] block">Included</span>
+                  <span className="font-medium text-slate-900 dark:text-white">
                     {channelData.specifics?.included || 'Belt Clip'}
                   </span>
                 </div>
@@ -644,22 +644,22 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               {/* Description */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 block">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
                     Item Description
                   </span>
                   <button
                     type="button"
                     onClick={() => handleCopy(channelData.ebay?.description, 'ebay-desc')}
-                    className="text-[11px] font-medium text-slate-500 hover:text-slate-800 flex items-center gap-0.5 cursor-pointer"
+                    className="text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-0.5 cursor-pointer"
                   >
                     {copiedKey === 'ebay-desc' ? (
-                      <span className="text-emerald-600 font-semibold">Copied Body</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copied Body</span>
                     ) : (
                       <span>Copy Body</span>
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed font-mono bg-slate-50/50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-mono bg-slate-50/50 dark:bg-slate-950/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 whitespace-pre-wrap">
                   {channelData.ebay?.description}
                 </p>
               </div>
@@ -667,14 +667,14 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
               {/* Keywords Tags */}
               {channelData.ebay?.keywords && channelData.ebay.keywords.length > 0 && (
                 <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                  <span className="text-[10px] uppercase font-semibold text-slate-500 mr-1">
+                  <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 mr-1">
                     Keywords:
                   </span>
                   {channelData.ebay.keywords.map((kw, i) => (
                     <span 
                       key={i}
                       onClick={() => handleCopy(kw, `kw-${i}`)}
-                      className="px-2 py-0.5 rounded bg-blue-50/70 border border-blue-100 text-blue-700 text-[10px] font-mono cursor-pointer hover:bg-blue-100 transition-colors"
+                      className="px-2 py-0.5 rounded bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-mono cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition-colors"
                       title="Click to copy keyword"
                     >
                       {kw}
@@ -686,26 +686,26 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
           </div>
 
           {/* Channel 2: Poshmark Closet (Curated & Tags) */}
-          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden transition-all hover:border-slate-300">
-            <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
+            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span className="font-bold text-xs uppercase tracking-wider text-slate-900">
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white">
                   Poshmark Closet
                 </span>
-                <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 text-[10px] font-semibold tracking-wide">
+                <span className="px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-[10px] font-semibold tracking-wide">
                   Aesthetic & Tags
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => handleCopy(channelData.poshmark?.title, 'posh-title')}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-orange-600 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-orange-600 transition-colors cursor-pointer"
               >
                 {copiedKey === 'posh-title' ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700">Copied</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-emerald-700 dark:text-emerald-300">Copied</span>
                   </>
                 ) : (
                   <>
@@ -718,15 +718,15 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
 
             <div className="p-5 flex flex-col gap-3">
               <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 block mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-1">
                   Listing Headline
                 </span>
-                <p className="text-sm font-semibold text-slate-900 font-sans">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white font-sans">
                   {channelData.poshmark?.title}
                 </p>
               </div>
 
-              <div className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap font-sans">
+              <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-sans">
                 {channelData.poshmark?.description}
               </div>
 
@@ -737,7 +737,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                     <span
                       key={i}
                       onClick={() => handleCopy(tag, `ptag-${i}`)}
-                      className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium cursor-pointer hover:bg-slate-200 transition-colors"
+                      className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-medium cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                       title="Click to copy tag"
                     >
                       {tag.startsWith('#') ? tag : `#${tag}`}
@@ -749,26 +749,26 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
           </div>
 
           {/* Channel 3: Mercari (Concise & Fast Dispatch) */}
-          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden transition-all hover:border-slate-300">
-            <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
+            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                <span className="font-bold text-xs uppercase tracking-wider text-slate-900">
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white">
                   Mercari
                 </span>
-                <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-semibold tracking-wide">
+                <span className="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[10px] font-semibold tracking-wide">
                   Concise • Fast Ship
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => handleCopy(channelData.mercari?.title, 'merc-title')}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-orange-600 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-orange-600 transition-colors cursor-pointer"
               >
                 {copiedKey === 'merc-title' ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700">Copied</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-emerald-700 dark:text-emerald-300">Copied</span>
                   </>
                 ) : (
                   <>
@@ -781,23 +781,23 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
 
             <div className="p-5 flex flex-col gap-3">
               <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 block mb-1">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-1">
                   Listing Headline
                 </span>
-                <p className="text-sm font-semibold text-slate-900 font-sans">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white font-sans">
                   {channelData.mercari?.title}
                 </p>
               </div>
 
               {/* Bullet Points */}
-              <ul className="text-xs text-slate-600 space-y-1.5 font-sans">
+              <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 font-sans">
                 {channelData.mercari?.bullets ? (
                   channelData.mercari.bullets.map((b, idx) => (
                     <li key={idx} className="flex items-start gap-1.5">
                       {b.type === 'truck' ? (
-                        <Truck className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        <Truck className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
                       ) : (
-                        <Check className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        <Check className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
                       )}
                       <span>
                         {b.bold && <strong>{b.bold}</strong>}
@@ -806,7 +806,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                     </li>
                   ))
                 ) : (
-                  <li className="text-xs text-slate-600">
+                  <li className="text-xs text-slate-600 dark:text-slate-300">
                     {channelData.mercari?.description}
                   </li>
                 )}
@@ -819,7 +819,7 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                     <span
                       key={i}
                       onClick={() => handleCopy(ht, `mht-${i}`)}
-                      className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium cursor-pointer hover:bg-slate-200 transition-colors"
+                      className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-medium cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                       title="Click to copy hashtag"
                     >
                       {ht.startsWith('#') ? ht : `#${ht}`}

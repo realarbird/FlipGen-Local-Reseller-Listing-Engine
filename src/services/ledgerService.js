@@ -116,3 +116,29 @@ export function exportArchiveToCSV() {
   link.click();
   document.body.removeChild(link);
 }
+
+/**
+ * Merge cloud archive items into local ledger without duplicates
+ */
+export function importArchiveItemsFromCloud(cloudItems) {
+  try {
+    if (!Array.isArray(cloudItems) || cloudItems.length === 0) return getArchiveItems();
+    const current = getArchiveItems();
+    const existingKeys = new Set(current.map(i => `${i.specimen}-${i.title}`));
+    const merged = [...current];
+
+    for (const item of cloudItems) {
+      const key = `${item.specimen}-${item.title}`;
+      if (!existingKeys.has(key)) {
+        merged.push(item);
+        existingKeys.add(key);
+      }
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    return merged;
+  } catch (e) {
+    console.error('Failed to merge cloud archive items:', e);
+    return getArchiveItems();
+  }
+}

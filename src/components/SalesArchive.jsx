@@ -4,11 +4,7 @@ import {
   Download, 
   Trash2, 
   Search, 
-  Copy, 
   Check, 
-  ArrowUpRight, 
-  ShoppingBag,
-  ExternalLink,
   Plus
 } from 'lucide-react';
 import { 
@@ -18,7 +14,7 @@ import {
   exportArchiveToCSV 
 } from '../services/ledgerService';
 
-export default function SalesArchive({ onNavigateToListing }) {
+export default function SalesArchive({ onNavigateToListing, onArchiveChanged }) {
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
@@ -30,12 +26,14 @@ export default function SalesArchive({ onNavigateToListing }) {
   const handleRemove = (id) => {
     const updated = removeArchiveItem(id);
     setItems(updated);
+    if (onArchiveChanged) onArchiveChanged();
   };
 
   const handleClear = () => {
     if (window.confirm('Clear all items from your local sales archive ledger?')) {
       const updated = clearArchive();
       setItems(updated);
+      if (onArchiveChanged) onArchiveChanged();
     }
   };
 
@@ -68,18 +66,18 @@ export default function SalesArchive({ onNavigateToListing }) {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2">
         <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-1.5">
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
             <span>Inventory Ledgers</span>
             <span>/</span>
-            <span className="text-slate-900 font-semibold">Historical Archive</span>
-            <span className="px-1.5 py-0.5 rounded text-[11px] bg-slate-100 text-slate-700 font-medium ml-1">
+            <span className="text-slate-900 dark:text-white font-semibold">Historical Archive</span>
+            <span className="px-1.5 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium ml-1">
               {items.length} Records
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950 dark:text-white font-sans">
             Sales Archive & Inventory Ledger
           </h1>
-          <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
             Historical specimen repository tracking unit economics, target valuations, and multi-platform listing syndication across eBay, Poshmark, and Mercari.
           </p>
         </div>
@@ -90,7 +88,7 @@ export default function SalesArchive({ onNavigateToListing }) {
             type="button"
             onClick={exportArchiveToCSV}
             disabled={items.length === 0}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
@@ -99,7 +97,7 @@ export default function SalesArchive({ onNavigateToListing }) {
             <button
               type="button"
               onClick={handleClear}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
               title="Clear all saved ledger items"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -111,51 +109,51 @@ export default function SalesArchive({ onNavigateToListing }) {
 
       {/* Summary Economics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Archived Items
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               {items.length}
             </span>
-            <span className="text-xs text-slate-500 font-medium">Specimens</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Specimens</span>
           </div>
         </div>
 
-        <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Total Target Value
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               ${totalValue.toFixed(2)}
             </span>
-            <span className="text-xs text-slate-500 font-medium">Gross Comps</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Gross Comps</span>
           </div>
         </div>
 
-        <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Total Thrift COGS
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               ${totalCost.toFixed(2)}
             </span>
-            <span className="text-xs text-slate-500 font-medium">Invested</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Invested</span>
           </div>
         </div>
 
-        <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Est. Net Profit
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-bold tracking-tight text-emerald-700">
+            <span className="text-2xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400">
               +${totalProfit.toFixed(2)}
             </span>
-            <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+            <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
               +{averageRoi}% ROI
             </span>
           </div>
@@ -163,21 +161,21 @@ export default function SalesArchive({ onNavigateToListing }) {
       </div>
 
       {/* Ledger Table Section */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors">
         {/* Table Top Toolbar */}
-        <div className="p-4 border-b border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/50">
+        <div className="p-4 border-b border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/40">
           <div className="relative flex-1 max-w-sm">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter by specimen #, title, or category..."
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600"
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600"
             />
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span>Showing {filtered.length} of {items.length} records</span>
           </div>
         </div>
@@ -185,16 +183,16 @@ export default function SalesArchive({ onNavigateToListing }) {
         {/* Table View */}
         {filtered.length === 0 ? (
           <div className="py-16 px-4 text-center flex flex-col items-center justify-center">
-            <Archive className="w-10 h-10 text-slate-300 stroke-1 mb-3" />
-            <h3 className="text-sm font-semibold text-slate-800">No items found in ledger</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-sm">
+            <Archive className="w-10 h-10 text-slate-300 dark:text-slate-600 stroke-1 mb-3" />
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">No items found in ledger</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
               Generate listings in the Single Lister workbench and click "Save to Ledger" to record your inventory here.
             </p>
             {onNavigateToListing && (
               <button
                 type="button"
                 onClick={onNavigateToListing}
-                className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-sm transition-all"
+                className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Go to Single Lister</span>
@@ -205,7 +203,7 @@ export default function SalesArchive({ onNavigateToListing }) {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-slate-200/80 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <th className="py-3 px-4">Specimen & Title</th>
                   <th className="py-3 px-4">Niche Category</th>
                   <th className="py-3 px-4">Condition</th>
@@ -216,47 +214,47 @@ export default function SalesArchive({ onNavigateToListing }) {
                   <th className="py-3 px-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                  <tr key={item.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                     <td className="py-3.5 px-4 max-w-xs">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                        <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                           {item.specimen}
                         </span>
-                        <span className="font-semibold text-slate-900 truncate" title={item.title}>
+                        <span className="font-semibold text-slate-900 dark:text-white truncate" title={item.title}>
                           {item.title}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
                         Saved {new Date(item.savedAt).toLocaleDateString()}
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-600">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-[11px] font-medium text-slate-700">
+                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300">
                         {item.niche}
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-600">
+                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
                       {item.condition}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-mono font-medium text-slate-700">
+                    <td className="py-3.5 px-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
                       ${parseFloat(item.cogs).toFixed(2)}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-900">
+                    <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-900 dark:text-white">
                       ${parseFloat(item.price).toFixed(2)}
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <span className="font-bold font-mono text-emerald-700">
+                        <span className="font-bold font-mono text-emerald-700 dark:text-emerald-400">
                           +${parseFloat(item.profit).toFixed(2)}
                         </span>
-                        <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                        <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
                           +{parseFloat(item.roi).toFixed(0)}%
                         </span>
                       </div>
@@ -268,13 +266,13 @@ export default function SalesArchive({ onNavigateToListing }) {
                           <button
                             type="button"
                             onClick={() => handleCopy(item.ebayTitle, `${item.id}-ebay`)}
-                            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors"
+                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
                             title="Copy eBay Title"
                           >
                             {copiedId === `${item.id}-ebay` ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                             ) : (
-                              <span className="text-[10px] font-bold text-blue-600">eB</span>
+                              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">eB</span>
                             )}
                           </button>
                         )}
@@ -282,13 +280,13 @@ export default function SalesArchive({ onNavigateToListing }) {
                           <button
                             type="button"
                             onClick={() => handleCopy(item.poshTitle, `${item.id}-posh`)}
-                            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-rose-600 transition-colors"
+                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                             title="Copy Poshmark Title"
                           >
                             {copiedId === `${item.id}-posh` ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                             ) : (
-                              <span className="text-[10px] font-bold text-rose-600">PM</span>
+                              <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400">PM</span>
                             )}
                           </button>
                         )}
@@ -296,13 +294,13 @@ export default function SalesArchive({ onNavigateToListing }) {
                           <button
                             type="button"
                             onClick={() => handleCopy(item.mercariTitle, `${item.id}-merc`)}
-                            className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-amber-600 transition-colors"
+                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
                             title="Copy Mercari Title"
                           >
                             {copiedId === `${item.id}-merc` ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                             ) : (
-                              <span className="text-[10px] font-bold text-amber-600">MC</span>
+                              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">MC</span>
                             )}
                           </button>
                         )}
@@ -313,7 +311,7 @@ export default function SalesArchive({ onNavigateToListing }) {
                       <button
                         type="button"
                         onClick={() => handleRemove(item.id)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                         title="Remove from ledger"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

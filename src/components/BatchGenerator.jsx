@@ -8,18 +8,10 @@ import {
   Pause, 
   RotateCcw, 
   Download, 
-  Sparkles, 
-  CheckCircle2, 
-  AlertCircle, 
-  Clock, 
-  DollarSign, 
-  Search,
-  Eye,
-  X,
-  Layers,
-  Copy,
-  Check,
-  ChevronRight
+  Check, 
+  Search, 
+  Eye, 
+  X 
 } from 'lucide-react';
 import { SAMPLE_BATCH_ITEMS, SAMPLE_CSV_CONTENT } from '../services/sampleData';
 import { generateListing } from '../services/ollamaService';
@@ -289,18 +281,18 @@ export default function BatchGenerator({ ollamaStatus, config }) {
       {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2">
         <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-1.5">
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
             <span>Catalog Desk</span>
             <span>/</span>
-            <span className="text-slate-900 font-semibold">Batch Processing</span>
-            <span className="px-1.5 py-0.5 rounded text-[11px] bg-slate-100 text-slate-700 font-medium ml-1">
+            <span className="text-slate-900 dark:text-white font-semibold">Batch Processing</span>
+            <span className="px-1.5 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium ml-1">
               {items.length} in queue
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950 font-sans">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950 dark:text-white font-sans">
             Batch CSV Processing Desk
           </h1>
-          <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
             Bulk-synthesize multi-platform listings from spreadsheets with on-device Gemma 2 at $0 token cost.
           </p>
         </div>
@@ -310,21 +302,21 @@ export default function BatchGenerator({ ollamaStatus, config }) {
           <button
             type="button"
             onClick={handleLoadSampleBatch}
-            className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm cursor-pointer"
+            className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm cursor-pointer"
           >
             📻 Load 5 Sample Flips
           </button>
           <button
             type="button"
             onClick={handleDownloadSampleTemplate}
-            className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm cursor-pointer"
+            className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm cursor-pointer"
           >
             Template CSV
           </button>
         </div>
       </div>
 
-      {/* Upload Dropzone (if empty or collapsed) */}
+      {/* Upload Dropzone (if empty) */}
       {items.length === 0 && (
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -334,8 +326,8 @@ export default function BatchGenerator({ ollamaStatus, config }) {
             setDragOver(false);
             if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
           }}
-          className={`bg-white rounded-xl border-2 border-dashed p-10 flex flex-col items-center justify-center text-center transition-all ${
-            dragOver ? 'border-orange-500 bg-orange-50/20' : 'border-slate-300 hover:border-slate-400'
+          className={`bg-white dark:bg-slate-900 rounded-xl border-2 border-dashed p-10 flex flex-col items-center justify-center text-center transition-all ${
+            dragOver ? 'border-orange-500 bg-orange-50/20' : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'
           }`}
         >
           <input
@@ -345,14 +337,14 @@ export default function BatchGenerator({ ollamaStatus, config }) {
             onChange={(e) => handleFileUpload(e.target.files?.[0])}
             className="hidden"
           />
-          <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 mb-3">
-            <Upload className="w-6 h-6 text-slate-600" />
+          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 mb-3">
+            <Upload className="w-6 h-6 text-slate-600 dark:text-slate-300" />
           </div>
-          <h3 className="text-sm font-bold text-slate-900 mb-1">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
             Drop inventory CSV file here or browse
           </h3>
-          <p className="text-xs text-slate-500 max-w-md mb-4">
-            Supports CSV headers: <code className="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">item_name</code>, <code className="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">condition</code>, <code className="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">raw_notes</code>, <code className="text-slate-700 bg-slate-100 px-1 py-0.5 rounded">price</code>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mb-4">
+            Supports CSV headers: <code className="text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">item_name</code>, <code className="text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">condition</code>, <code className="text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">raw_notes</code>, <code className="text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">price</code>
           </p>
           <div className="flex items-center gap-3">
             <button
@@ -365,7 +357,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
             <button
               type="button"
               onClick={handleLoadSampleBatch}
-              className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-sm transition-all cursor-pointer"
+              className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-sm transition-all cursor-pointer"
             >
               Use 5 Sample Vintage Items
             </button>
@@ -379,59 +371,59 @@ export default function BatchGenerator({ ollamaStatus, config }) {
           
           {/* Summary Economics Bar */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Queue Progress
               </span>
               <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-2xl font-bold tracking-tight text-slate-900">
+                <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                   {completedTotal} / {items.length}
                 </span>
-                <span className="text-xs text-slate-500 font-medium">{progressPercent}%</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{progressPercent}%</span>
               </div>
             </div>
 
-            <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Inference Cost
               </span>
               <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-2xl font-bold tracking-tight text-emerald-700 font-mono">
+                <span className="text-2xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400 font-mono">
                   $0.00
                 </span>
-                <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
                   100% On-Device
                 </span>
               </div>
             </div>
 
-            <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 API Cost Saved
               </span>
               <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
+                <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-mono">
                   ${batchStats.moneySaved.toFixed(2)}
                 </span>
-                <span className="text-xs text-slate-500 font-medium">vs GPT-4o</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">vs GPT-4o</span>
               </div>
             </div>
 
-            <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Tokens Generated
               </span>
               <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
+                <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-mono">
                   {batchStats.totalTokens}
                 </span>
-                <span className="text-xs text-slate-500 font-medium">Gemma 2</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Gemma 2</span>
               </div>
             </div>
           </div>
 
           {/* Action Toolbar */}
-          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 transition-colors">
             <div className="flex items-center gap-2 flex-wrap">
               {!isProcessing ? (
                 <button
@@ -458,7 +450,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
                 type="button"
                 onClick={handleReset}
                 disabled={isProcessing}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset</span>
@@ -468,7 +460,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
                 type="button"
                 onClick={handleExportCSV}
                 disabled={completedTotal === 0}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Export Enriched CSV</span>
@@ -476,23 +468,23 @@ export default function BatchGenerator({ ollamaStatus, config }) {
             </div>
 
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Filter items..."
-                className="w-full sm:w-64 pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600"
+                className="w-full sm:w-64 pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600"
               />
             </div>
           </div>
 
           {/* Table Container */}
-          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200/80 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     <th className="py-3 px-4">#</th>
                     <th className="py-3 px-4">Item & Identifier</th>
                     <th className="py-3 px-4">Condition</th>
@@ -502,54 +494,54 @@ export default function BatchGenerator({ ollamaStatus, config }) {
                     <th className="py-3 px-4 text-right">Inspect</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredItems.map((item, idx) => (
                     <tr 
                       key={item.id} 
-                      className={`hover:bg-slate-50/70 transition-colors ${
-                        item.status === 'processing' ? 'bg-orange-50/30' : ''
+                      className={`hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors ${
+                        item.status === 'processing' ? 'bg-orange-50/30 dark:bg-orange-950/20' : ''
                       }`}
                     >
-                      <td className="py-3.5 px-4 font-mono text-slate-400">
+                      <td className="py-3.5 px-4 font-mono text-slate-400 dark:text-slate-500">
                         {idx + 1}
                       </td>
 
                       <td className="py-3.5 px-4 max-w-xs">
-                        <span className="font-semibold text-slate-900 block truncate" title={item.item_name}>
+                        <span className="font-semibold text-slate-900 dark:text-white block truncate" title={item.item_name}>
                           {item.item_name}
                         </span>
-                        <span className="text-[11px] text-slate-500 truncate block">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate block">
                           {item.raw_notes || 'No raw notes provided'}
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-4 text-slate-600">
+                      <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
                         {item.condition}
                       </td>
 
-                      <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-900">
+                      <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-900 dark:text-white">
                         ${parseFloat(item.price || 0).toFixed(2)}
                       </td>
 
-                      <td className="py-3.5 px-4 text-right font-mono text-slate-600">
+                      <td className="py-3.5 px-4 text-right font-mono text-slate-600 dark:text-slate-400">
                         ${parseFloat(item.cost || 0).toFixed(2)}
                       </td>
 
                       <td className="py-3.5 px-4 text-center">
                         {item.status === 'completed' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
                             <Check className="w-3 h-3" /> Ready
                           </span>
                         ) : item.status === 'processing' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 text-orange-700 animate-pulse">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 animate-pulse">
                             Processing
                           </span>
                         ) : item.status === 'failed' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
                             Failed
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                             Pending
                           </span>
                         )}
@@ -560,7 +552,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
                           type="button"
                           disabled={!item.generatedData}
                           onClick={() => setSelectedItem(item)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold text-slate-700 hover:text-orange-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>View</span>
@@ -583,72 +575,72 @@ export default function BatchGenerator({ ollamaStatus, config }) {
           onClick={() => setSelectedItem(null)}
         >
           <div 
-            className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl p-6 max-h-[85vh] overflow-y-auto space-y-5"
+            className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 max-h-[85vh] overflow-y-auto space-y-5 text-slate-900 dark:text-slate-100 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Batch Item Specimen
                 </span>
-                <h3 className="text-base font-bold text-slate-900 mt-0.5">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
                   {selectedItem.item_name}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedItem(null)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors"
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* eBay */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                   eBay Title ({selectedItem.generatedData.ebay?.title?.length || 0}/80)
                 </span>
                 <button
                   type="button"
                   onClick={() => handleCopy(selectedItem.generatedData.ebay?.title, 'drawer-ebay')}
-                  className="text-xs font-semibold text-slate-600 hover:text-blue-600 transition-colors"
+                  className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
                 >
                   {copiedKey === 'drawer-ebay' ? 'Copied' : 'Copy'}
                 </button>
               </div>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
                 {selectedItem.generatedData.ebay?.title}
               </p>
-              <p className="text-xs text-slate-600 font-mono whitespace-pre-wrap pt-2">
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-mono whitespace-pre-wrap pt-2">
                 {selectedItem.generatedData.ebay?.description}
               </p>
             </div>
 
             {/* Poshmark */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-rose-700 uppercase tracking-wider">
+                <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">
                   Poshmark Headline & Tags
                 </span>
                 <button
                   type="button"
                   onClick={() => handleCopy(selectedItem.generatedData.poshmark?.title, 'drawer-posh')}
-                  className="text-xs font-semibold text-slate-600 hover:text-rose-600 transition-colors"
+                  className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                 >
                   {copiedKey === 'drawer-posh' ? 'Copied' : 'Copy'}
                 </button>
               </div>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
                 {selectedItem.generatedData.poshmark?.title}
               </p>
-              <p className="text-xs text-slate-600 whitespace-pre-wrap pt-1">
+              <p className="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap pt-1">
                 {selectedItem.generatedData.poshmark?.description}
               </p>
               <div className="flex gap-1.5 flex-wrap pt-1">
                 {selectedItem.generatedData.poshmark?.tags?.map((t, idx) => (
-                  <span key={idx} className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium">
+                  <span key={idx} className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium">
                     {t.startsWith('#') ? t : `#${t}`}
                   </span>
                 ))}
@@ -656,23 +648,23 @@ export default function BatchGenerator({ ollamaStatus, config }) {
             </div>
 
             {/* Mercari */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
                   Mercari Headline & Bullets
                 </span>
                 <button
                   type="button"
                   onClick={() => handleCopy(selectedItem.generatedData.mercari?.title, 'drawer-merc')}
-                  className="text-xs font-semibold text-slate-600 hover:text-amber-600 transition-colors"
+                  className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
                 >
                   {copiedKey === 'drawer-merc' ? 'Copied' : 'Copy'}
                 </button>
               </div>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
                 {selectedItem.generatedData.mercari?.title}
               </p>
-              <div className="text-xs text-slate-600 whitespace-pre-wrap pt-1">
+              <div className="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap pt-1">
                 {selectedItem.generatedData.mercari?.description}
               </div>
             </div>
@@ -681,7 +673,7 @@ export default function BatchGenerator({ ollamaStatus, config }) {
               <button
                 type="button"
                 onClick={() => setSelectedItem(null)}
-                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm"
+                className="px-4 py-2 rounded-lg bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-sm cursor-pointer"
               >
                 Done
               </button>
