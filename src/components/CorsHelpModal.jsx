@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Copy, 
@@ -10,13 +10,30 @@ import {
   AlertCircle, 
   Globe, 
   Lock,
-  ArrowRight
+  ArrowRight,
+  Settings,
+  CheckCircle2
 } from 'lucide-react';
 
-export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
+export default function CorsHelpModal({ 
+  isOpen, 
+  onClose, 
+  onEnableDemoMode,
+  currentUrl = 'http://localhost:11434',
+  onSaveTunnelUrl,
+  onOpenSettings
+}) {
   const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
   const [copiedCmd, setCopiedCmd] = useState(null);
   const [activeTab, setActiveTab] = useState(isHttps ? 'render' : 'mac');
+  const [tunnelInput, setTunnelInput] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    if (currentUrl && currentUrl.startsWith('https://')) {
+      setTunnelInput(currentUrl);
+    }
+  }, [currentUrl, isOpen]);
 
   if (!isOpen) return null;
 
@@ -26,9 +43,23 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
     setTimeout(() => setCopiedCmd(null), 2000);
   };
 
+  const handleApplyTunnel = () => {
+    const trimmed = tunnelInput.trim();
+    if (!trimmed) return;
+    if (onSaveTunnelUrl) {
+      onSaveTunnelUrl(trimmed);
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        onClose();
+      }, 1200);
+    }
+  };
+
   const primaryCommand = 'OLLAMA_ORIGINS="*" ollama serve';
-  const cloudflareCommand = 'npx cloudflared tunnel --url http://localhost:11434';
+  const cloudflareCommand = 'npx cloudflared tunnel --url http://localhost:11434 --http-host-header="localhost:11434"';
   const localtunnelCommand = 'npx localtunnel --port 11434';
+  const killOllamaCommand = 'pkill -f Ollama; launchctl setenv OLLAMA_ORIGINS "*"; open -a Ollama';
 
   return (
     <div 
@@ -80,7 +111,7 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
                 Render serves this site securely over <strong className="text-white">HTTPS</strong>. Modern web browsers block JavaScript on HTTPS pages from requesting insecure <code className="bg-amber-950/80 px-1 py-0.5 rounded font-mono text-amber-300">http://localhost:11434</code> (called the <strong>Mixed Content Security Policy</strong>).
               </p>
               <p className="text-amber-300 font-medium pt-1">
-                👉 Select the <strong className="underline">Render (HTTPS) Tunnel</strong> tab below for the 1-command fix, or toggle <strong className="underline">Judge Demo Mode</strong> for instant testing!
+                👉 Follow the 3 quick steps below to connect your local Gemma 2, or toggle <strong className="underline">Judge Demo Mode</strong> for instant zero-setup testing!
               </p>
             </div>
           )}
@@ -137,47 +168,115 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
 
             {/* TAB: Render HTTPS Tunnel */}
             {activeTab === 'render' && (
-              <div className="space-y-4 text-xs">
+              <div className="space-y-5 text-xs">
                 
                 {/* Method 1: Cloudflare Tunnel */}
-                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-200">
-                      Option A: 1-Command Free HTTPS Tunnel (Recommended)
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="font-bold text-slate-100 text-sm">
+                      How to Connect Local Gemma 2 to Render (3 Steps)
                     </span>
                     <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 font-medium">
-                      No Account Needed
+                      Free & No Account Needed
                     </span>
                   </div>
-                  <p className="text-slate-400 text-[11px]">
-                    Run this in your terminal. It gives your local Ollama a secure temporary <code className="text-indigo-300 font-mono">https://...trycloudflare.com</code> URL that Render can reach without mixed-content errors:
-                  </p>
 
-                  <div className="flex items-center justify-between px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-lg font-mono text-emerald-400 text-xs">
-                    <span className="truncate">{cloudflareCommand}</span>
-                    <button
-                      onClick={() => copyCommand(cloudflareCommand, 'cf')}
-                      className="ml-2 flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-[11px] transition-colors shrink-0"
-                    >
-                      {copiedCmd === 'cf' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      <span>{copiedCmd === 'cf' ? 'Copied' : 'Copy'}</span>
-                    </button>
+                  {/* Step 1: Fix address in use & start Ollama with CORS */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 font-semibold text-slate-200">
+                      <span className="w-5 h-5 rounded-full bg-indigo-600/30 text-indigo-400 flex items-center justify-center text-[10px]">1</span>
+                      <span>If you saw "address already in use", restart Ollama with CORS:</span>
+                    </div>
+                    <p className="text-slate-400 text-[11px] pl-6">
+                      Ollama was already running in your Mac menu bar without CORS. Run this in Terminal to restart it with <code className="text-amber-300 font-mono">OLLAMA_ORIGINS="*"</code>:
+                    </p>
+                    <div className="ml-6 flex items-center justify-between px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg font-mono text-emerald-400 text-[11px]">
+                      <span className="truncate">{killOllamaCommand}</span>
+                      <button
+                        onClick={() => copyCommand(killOllamaCommand, 'kill')}
+                        className="ml-2 flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-[10px] transition-colors shrink-0"
+                      >
+                        {copiedCmd === 'kill' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedCmd === 'kill' ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <p className="text-[11px] text-slate-400 pt-1">
-                    Once it prints the <code className="text-white font-mono">https://...trycloudflare.com</code> URL:
-                    <br />
-                    Click <strong>Settings</strong> (top right gear icon in FlipGen) $\rightarrow$ paste the HTTPS URL into <strong>Ollama Host URL</strong> $\rightarrow$ Save!
-                  </p>
+                  {/* Step 2: Start Cloudflare tunnel */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 font-semibold text-slate-200">
+                      <span className="w-5 h-5 rounded-full bg-indigo-600/30 text-indigo-400 flex items-center justify-center text-[10px]">2</span>
+                      <span>In a new terminal window, run the Cloudflare Tunnel:</span>
+                    </div>
+                    <p className="text-slate-400 text-[11px] pl-6">
+                      Use the <code className="text-amber-300 font-mono">--http-host-header</code> flag so Ollama allows the connection:
+                    </p>
+                    <div className="ml-6 flex items-center justify-between px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg font-mono text-emerald-400 text-[11px]">
+                      <span className="truncate">{cloudflareCommand}</span>
+                      <button
+                        onClick={() => copyCommand(cloudflareCommand, 'cf')}
+                        className="ml-2 flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-[10px] transition-colors shrink-0"
+                      >
+                        {copiedCmd === 'cf' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedCmd === 'cf' ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Step 3: CRUCIAL - Input into settings */}
+                  <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                    <div className="flex items-center gap-1.5 font-semibold text-amber-300 text-xs">
+                      <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-[10px]">3</span>
+                      <span>CRITICAL: Enter your generated Cloudflare URL below:</span>
+                    </div>
+                    <p className="text-slate-300 text-[11px] pl-6 leading-relaxed">
+                      Copy the <code className="text-indigo-300 font-mono">https://...trycloudflare.com</code> URL that printed in your terminal and paste it here:
+                    </p>
+
+                    <div className="ml-6 space-y-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={tunnelInput}
+                          onChange={(e) => setTunnelInput(e.target.value)}
+                          placeholder="e.g. https://assignment-clone-constraint-redeem.trycloudflare.com"
+                          className="flex-1 px-3 py-2 bg-slate-900 border border-indigo-500/40 rounded-xl text-slate-100 placeholder-slate-500 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyTunnel}
+                          disabled={!tunnelInput.trim()}
+                          className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-emerald-500 hover:from-indigo-500 hover:to-emerald-400 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all shrink-0"
+                        >
+                          {saveSuccess ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                              <span>Connected!</span>
+                            </>
+                          ) : (
+                            <>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                              <span>Save & Connect</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <p className="text-[10px] text-slate-400">
+                        You can also change this anytime by clicking the <strong>Settings (⚙️ icon)</strong> in the top right.
+                      </p>
+                    </div>
+                  </div>
+
                 </div>
 
                 {/* Method 2: Browser Site Settings */}
                 <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-2">
                   <span className="font-semibold text-slate-200 block">
-                    Option B: Allow Insecure Content in Chrome (No Software Needed)
+                    Alternative: Allow Insecure Content in Chrome (No Tunnel Needed)
                   </span>
                   <ol className="list-decimal list-inside space-y-1 text-slate-400 text-[11px]">
-                    <li>Make sure Ollama is running with CORS: <code className="text-indigo-300 font-mono">OLLAMA_ORIGINS="*" ollama serve</code></li>
+                    <li>Make sure Ollama is restarted with CORS: <code className="text-indigo-300 font-mono">OLLAMA_ORIGINS="*" ollama serve</code></li>
                     <li>In Chrome/Edge on your Render site, click the <strong>tune / padlock icon</strong> on the left side of the address bar.</li>
                     <li>Click <strong>Site settings</strong>.</li>
                     <li>Find <strong>Insecure content</strong> and change it from <em>Block (default)</em> to <strong className="text-emerald-400">Allow</strong>.</li>
@@ -189,7 +288,7 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
                 <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20 flex items-center justify-between gap-3">
                   <div className="space-y-0.5">
                     <span className="font-semibold text-amber-300 block text-xs">
-                      Option C: Zero-Setup Judge Demo Mode
+                      Zero-Setup: Judge Demo Mode
                     </span>
                     <p className="text-[11px] text-slate-400">
                       Evaluate every feature instantly with realistic simulated Gemma 2 outputs. No local installation required.
@@ -200,7 +299,7 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
                       onEnableDemoMode();
                       onClose();
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-semibold shrink-0"
+                    className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-semibold shrink-0 cursor-pointer"
                   >
                     Use Demo Mode
                   </button>
@@ -212,12 +311,13 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
             {/* TAB: macOS */}
             {activeTab === 'mac' && (
               <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2 font-mono">
-                <p className="text-slate-400"># 1. Quit the Ollama menu bar app</p>
-                <p className="text-slate-400"># 2. In Terminal, run:</p>
+                <p className="text-slate-400"># 1. Quit Ollama (Menu Bar icon -&gt; Quit)</p>
+                <p className="text-slate-400"># 2. Or kill existing process in Terminal:</p>
+                <p className="text-rose-400">pkill -f Ollama</p>
+                <p className="text-slate-400"># 3. Set environment variable globally for Mac apps:</p>
                 <p className="text-emerald-400 font-semibold">launchctl setenv OLLAMA_ORIGINS "*"</p>
-                <p className="text-slate-400"># 3. Restart Ollama from Applications</p>
-                <p className="text-slate-400"># Or simply run in any terminal:</p>
-                <p className="text-indigo-400">OLLAMA_ORIGINS="*" ollama serve</p>
+                <p className="text-slate-400"># 4. Restart Ollama from Applications or terminal:</p>
+                <p className="text-indigo-400">open -a Ollama</p>
               </div>
             )}
 
@@ -267,19 +367,31 @@ export default function CorsHelpModal({ isOpen, onClose, onEnableDemoMode }) {
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            {onOpenSettings && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenSettings();
+                }}
+                className="flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>Open Settings</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 onEnableDemoMode();
                 onClose();
               }}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 transition-all shadow-lg shadow-amber-500/10"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5 fill-current" />
               <span>Use Judge Demo Mode</span>
             </button>
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+              className="px-4 py-2 text-xs font-medium rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
             >
               Close
             </button>
