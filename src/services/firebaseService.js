@@ -1,4 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import { 
   getAuth, 
   signInWithPopup, 
@@ -28,22 +29,24 @@ const CLOUD_MOCK_STORAGE = 'flipgen_cloud_mock_storage';
 const FIREBASE_CONFIG_STORAGE = 'flipgen_firebase_custom_config';
 
 const DEFAULT_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDzdj8ZVzySsTk0-UnvimcLPrNw2yjwd0U",
+  apiKey: "",
   authDomain: "flipgen-reseller-engine.firebaseapp.com",
   projectId: "flipgen-reseller-engine",
   storageBucket: "flipgen-reseller-engine.firebasestorage.app",
   messagingSenderId: "723388573425",
-  appId: "1:723388573425:web:97736acbb73fc56cc32b50"
+  appId: "1:723388573425:web:2cb0fe5dfd9cafe2c32b50",
+  measurementId: "G-0KMPC2VW3M"
 };
 
 export function getFirebaseConfig() {
   const envConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || DEFAULT_FIREBASE_CONFIG.apiKey,
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || DEFAULT_FIREBASE_CONFIG.apiKey || '',
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || DEFAULT_FIREBASE_CONFIG.authDomain,
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || DEFAULT_FIREBASE_CONFIG.projectId,
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || DEFAULT_FIREBASE_CONFIG.storageBucket,
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || DEFAULT_FIREBASE_CONFIG.messagingSenderId,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || DEFAULT_FIREBASE_CONFIG.appId
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || DEFAULT_FIREBASE_CONFIG.appId,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || DEFAULT_FIREBASE_CONFIG.measurementId
   };
 
   if (envConfig.apiKey && envConfig.projectId) {
@@ -55,7 +58,7 @@ export function getFirebaseConfig() {
     if (custom) {
       const parsed = JSON.parse(custom);
       if (parsed.apiKey && parsed.projectId) {
-        return parsed;
+        return { ...envConfig, ...parsed };
       }
     }
   } catch (e) {
@@ -75,13 +78,14 @@ export function saveCustomFirebaseConfig(config) {
 let firebaseApp = null;
 let firebaseAuth = null;
 let firestoreDb = null;
+let firebaseAnalytics = null;
 
 export function getFirebaseInstances() {
   const config = getFirebaseConfig();
   const isConfigured = Boolean(config.apiKey && config.projectId);
 
   if (!isConfigured) {
-    return { isConfigured: false, app: null, auth: null, db: null };
+    return { isConfigured: false, app: null, auth: null, db: null, analytics: null };
   }
 
   if (!firebaseApp) {
@@ -89,12 +93,24 @@ export function getFirebaseInstances() {
       firebaseApp = getApps().length > 0 ? getApp() : initializeApp(config);
       firebaseAuth = getAuth(firebaseApp);
       firestoreDb = getFirestore(firebaseApp);
+
+      if (typeof window !== 'undefined' && (config.measurementId || config.appId)) {
+        isSupported().then((supported) => {
+          if (supported) {
+            firebaseAnalytics = getAnalytics(firebaseApp);
+          }
+        }).catch(() => {});
+      }
     } catch (err) {
-      return { isConfigured: false, app: null, auth: null, db: null, error: err };
+      return { isConfigured: false, app: null, auth: null, db: null, analytics: null, error: err };
     }
   }
 
-  return { isConfigured: true, app: firebaseApp, auth: firebaseAuth, db: firestoreDb };
+  return { isConfigured: true, app: firebaseApp, auth: firebaseAuth, db: firestoreDb, analytics: firebaseAnalytics };
+}
+
+export function getFirebaseAnalytics() {
+  return firebaseAnalytics;
 }
 
 const syncListeners = new Set();

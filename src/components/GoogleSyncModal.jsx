@@ -41,6 +41,7 @@ export default function GoogleSyncModal({
   const [projectId, setProjectId] = useState(currentConfig.projectId || '');
   const [storageBucket, setStorageBucket] = useState(currentConfig.storageBucket || '');
   const [appId, setAppId] = useState(currentConfig.appId || '');
+  const [measurementId, setMeasurementId] = useState(currentConfig.measurementId || '');
 
   if (!isOpen) return null;
 
@@ -120,7 +121,8 @@ export default function GoogleSyncModal({
       authDomain: authDomain.trim() || `${projectId.trim()}.firebaseapp.com`,
       projectId: projectId.trim(),
       storageBucket: storageBucket.trim(),
-      appId: appId.trim()
+      appId: appId.trim(),
+      measurementId: measurementId.trim()
     });
     setErrorMessage(null);
     setShowConfigDrawer(false);
