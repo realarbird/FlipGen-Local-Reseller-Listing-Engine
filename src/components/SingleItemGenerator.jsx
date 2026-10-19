@@ -5,7 +5,6 @@ import {
   Copy, 
   Check, 
   Archive, 
-  Plus, 
   Truck, 
   ChevronDown, 
   Zap 
@@ -30,7 +29,6 @@ export default function SingleItemGenerator({ ollamaStatus, config, onNavigateTo
     notes: initialPreset.notes
   });
 
-  const [photos, setPhotos] = useState(initialPreset.photos || []);
   const [isLoading, setIsLoading] = useState(false);
   const [copiedKey, setCopiedKey] = useState(null);
   const [savedToLedger, setSavedToLedger] = useState(false);
@@ -76,7 +74,6 @@ export default function SingleItemGenerator({ ollamaStatus, config, onNavigateTo
       price: preset.price,
       notes: preset.notes
     });
-    setPhotos(preset.photos || []);
     setChannelData({
       specifics: preset.specifics,
       ebay: preset.ebay,
@@ -85,22 +82,6 @@ export default function SingleItemGenerator({ ollamaStatus, config, onNavigateTo
       pricing_tip: ''
     });
     setSavedToLedger(false);
-  };
-
-  // Add photo handler
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const newPhoto = {
-        label: `Photo ${photos.length + 1}`,
-        src: event.target.result,
-        alt: file.name
-      };
-      setPhotos([...photos, newPhoto]);
-    };
-    reader.readAsDataURL(file);
   };
 
   // Generate / Synthesize Listings
@@ -321,43 +302,6 @@ ${channelData.mercari?.hashtags?.join(' ') || ''}
                 placeholder="e.g. 1994 Carhartt J97 MOS Blanket Lined Detroit Jacket"
                 className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all font-sans"
               />
-            </div>
-
-            {/* Compact Photo Strip */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-800 dark:text-slate-200">Item Inspection Photos</span>
-                <span className="text-slate-600 dark:text-slate-400">{photos.length} uploaded</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2.5">
-                {photos.map((photo, idx) => (
-                  <div 
-                    key={idx}
-                    className="relative aspect-[4/3] rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 group"
-                  >
-                    <img
-                      src={photo.src}
-                      alt={photo.alt || photo.label}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                    />
-                    <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[10px] font-medium text-white">
-                      {photo.label}
-                    </span>
-                  </div>
-                ))}
-
-                {/* Add Photo Tile */}
-                <label className="border border-dashed border-slate-300 dark:border-slate-700 rounded-lg aspect-[4/3] flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-all text-slate-500 dark:text-slate-400">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                  <Plus className="w-5 h-5 text-slate-400 dark:text-slate-500" />
-                  <span className="text-[11px] font-medium mt-0.5">Add photo</span>
-                </label>
-              </div>
             </div>
 
             {/* Category & Condition Dropdowns */}

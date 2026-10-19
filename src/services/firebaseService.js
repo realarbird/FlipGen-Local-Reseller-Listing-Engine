@@ -23,15 +23,25 @@ const LAST_SYNC_KEY = 'flipgen_last_sync_timestamp';
 const CLOUD_MOCK_STORAGE = 'flipgen_cloud_mock_storage';
 const FIREBASE_CONFIG_STORAGE = 'flipgen_firebase_custom_config';
 
-// 1. Read Firebase Config from Vite environment or LocalStorage override
+// Default project configuration for FlipGen Reseller Engine
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDzdj8ZVzySsTk0-UnvimcLPrNw2yjwd0U",
+  authDomain: "flipgen-reseller-engine.firebaseapp.com",
+  projectId: "flipgen-reseller-engine",
+  storageBucket: "flipgen-reseller-engine.firebasestorage.app",
+  messagingSenderId: "723388573425",
+  appId: "1:723388573425:web:97736acbb73fc56cc32b50"
+};
+
+// 1. Read Firebase Config from Vite environment, LocalStorage override, or Default
 export function getFirebaseConfig() {
   const envConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || ''
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || DEFAULT_FIREBASE_CONFIG.apiKey,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || DEFAULT_FIREBASE_CONFIG.authDomain,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || DEFAULT_FIREBASE_CONFIG.projectId,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || DEFAULT_FIREBASE_CONFIG.storageBucket,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || DEFAULT_FIREBASE_CONFIG.messagingSenderId,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || DEFAULT_FIREBASE_CONFIG.appId
   };
 
   if (envConfig.apiKey && envConfig.projectId) {
